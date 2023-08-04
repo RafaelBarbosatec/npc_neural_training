@@ -1,4 +1,4 @@
-# npc_neural
+# NPC Neural Network
 
 Simple implementation of the training of NPC using Neural Network perceptron and Bonfire.
 
