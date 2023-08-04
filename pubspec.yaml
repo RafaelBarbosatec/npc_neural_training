@@ -1,0 +1,33 @@
+name: npc_neural
+description: A new Flutter project.
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.0.6 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  bonfire: ^3.0.0-beta.3
+  neurons_tree_widget: ^0.0.1
+  d_chart: ^2.3.0
+  shared_preferences: ^2.2.0
+  synadart:
+    git: 
+      url: https://github.com/RafaelBarbosatec/synadart
+      ref: b083d201975508b7ec46410a3eb48adbdd509406
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/images/map/
+    - assets/json/
