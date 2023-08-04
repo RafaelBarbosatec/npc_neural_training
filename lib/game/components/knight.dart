@@ -12,7 +12,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     ..color = Colors.green.withOpacity(0.4)
     ..strokeWidth = 1.5;
 
-  final bool execNeural;
+  final bool training;
   Sequential neuralnetWork;
   late ShapeHitbox hitbox;
   List<RaycastResult<ShapeHitbox>> eyesResult = [];
@@ -25,12 +25,12 @@ class Knight extends SimpleAlly with BlockMovementCollision {
   bool winner = false;
   double score = 0;
   int rank = 0;
-  bool get isBetter => execNeural ? true : rank == 1;
+  bool get isTheBest => !training ? true : rank == 1;
 
   Knight({
     required super.position,
     required this.neuralnetWork,
-    this.execNeural = false,
+    this.training = true,
   }) : super(
           size: Vector2.all(NpcNeuralGame.tilesize),
           animation: SimpleDirectionAnimation(
@@ -53,15 +53,14 @@ class Knight extends SimpleAlly with BlockMovementCollision {
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     if (other is Chest) {
-      Spritesheet.chestOpen.then((value) => other.setAnimation(value));
-      if (!execNeural) {
+      if (training) {
         var manager = BonfireInjector().get<GenerationManager>();
         winner = manager.setWin(this);
       } else {
         winner = true;
       }
       stopMove();
-    } else if (!execNeural) {
+    } else if (training) {
       die();
     }
 
@@ -74,9 +73,9 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     if (!isDead && !winner) {
       if (checkInterval('execNeural', 25, dt)) {
         _execNetwork(dt);
-        opacity = isBetter ? 1 : 0.4;
+        opacity = isTheBest ? 1 : 0.4;
       }
-      if (!execNeural) {
+      if (training) {
         lifeTime?.update(dt);
         checkStopTime?.update(dt);
       }
@@ -87,7 +86,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
   void render(Canvas canvas) {
     if (rank < 20 && !isDead) {
       super.render(canvas);
-      if (isBetter) {
+      if (isTheBest) {
         _renderRayCast(canvas);
       }
     }
@@ -106,9 +105,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
 
   void _execNetwork(double dt) {
     var chest = getTarget();
-    if (chest == null) {
-      return;
-    }
+    if (chest == null) return;
 
     List<ShapeHitbox> ignoreHitboxes = _getIgnoreHitboxes(chest);
 
@@ -116,13 +113,14 @@ class Knight extends SimpleAlly with BlockMovementCollision {
 
     if (eyesResult.length == 5) {
       List<double> inputs = eyesResult.map((e) => e.distance ?? 0).toList();
-
       inputs.add(angleTo(chest.absolutePosition));
+
       final actionresult = neuralnetWork.process(inputs);
+
       _moveByResult(actionresult);
     }
 
-    if (isBetter) {
+    if (isTheBest) {
       BonfireInjector().get<BetterNeuralListener>().setNeural(neuralnetWork);
     }
   }
@@ -209,11 +207,6 @@ class Knight extends SimpleAlly with BlockMovementCollision {
       eyesResult.add(r3);
     }
 
-    // var r4 = _createRay(1.0472, ignoreHitboxes);
-    // if (r4 != null) {
-    //   eyesResult.add(r4);
-    // }
-
     var r5 = _createRay(-0.349066, ignoreHitboxes);
     if (r5 != null) {
       eyesResult.add(r5);
@@ -224,10 +217,6 @@ class Knight extends SimpleAlly with BlockMovementCollision {
       eyesResult.add(r6);
     }
 
-    // var r7 = _createRay(-1.0472, ignoreHitboxes);
-    // if (r7 != null) {
-    //   eyesResult.add(r7);
-    // }
   }
 
   void _moveByResult(List<double> actionresult) {

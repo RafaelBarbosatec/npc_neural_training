@@ -1,8 +1,9 @@
 import 'package:bonfire/bonfire.dart';
+import 'package:npc_neural/game/components/knight.dart';
 import 'package:npc_neural/game/npc_neural_game.dart';
 import 'package:npc_neural/util/spritesheet.dart';
 
-class Chest extends GameDecoration with DragGesture{
+class Chest extends GameDecoration with DragGesture {
   late ShapeHitbox hitbox;
   Chest({
     required super.position,
@@ -15,5 +16,13 @@ class Chest extends GameDecoration with DragGesture{
   Future<void> onLoad() {
     add(hitbox = RectangleHitbox(size: size));
     return super.onLoad();
+  }
+
+  @override
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    if (other is Knight) {
+      Spritesheet.chestOpen.then((value) => setAnimation(value));
+    }
+    super.onCollision(intersectionPoints, other);
   }
 }

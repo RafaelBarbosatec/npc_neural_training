@@ -63,7 +63,7 @@ class _NpcNeuralGameState extends State<NpcNeuralGame> {
           : Knight(
               position: GenerationManager.initPosition,
               neuralnetWork: widget.neural!,
-              execNeural: true,
+              training: false,
             ),
     );
   }

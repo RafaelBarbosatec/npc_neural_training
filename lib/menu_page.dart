@@ -12,7 +12,7 @@ class MenuPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bonfire + Network neural'),
+        title: const Text('Bonfire + Network Neural'),
       ),
       body: Center(
         child: Column(
@@ -22,7 +22,7 @@ class MenuPage extends StatelessWidget {
               width: 200,
               child: ElevatedButton(
                 onPressed: () => _goToGame(context),
-                child: const Text('Train'),
+                child: const Text('Train my network'),
               ),
             ),
             const SizedBox(
