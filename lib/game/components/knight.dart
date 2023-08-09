@@ -143,11 +143,14 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     for (var result in eyesResult) {
       final intersectionPoint = result.intersectionPoint?.toOffset();
       if (intersectionPoint != null) {
+        final intersection = intersectionPoint - position.toOffset();
+        final p = result.isTarget ? _rayTargetPaint : _rayCollisionPaint;
         canvas.drawLine(
           absoluteCenter.toOffset() - position.toOffset(),
-          intersectionPoint - position.toOffset(),
-          result.isTarget ? _rayTargetPaint : _rayCollisionPaint,
+          intersection,
+          p,
         );
+        canvas.drawCircle(intersection, 4, p);
       }
     }
   }
