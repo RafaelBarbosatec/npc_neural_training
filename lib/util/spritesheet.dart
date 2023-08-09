@@ -61,4 +61,11 @@ class Spritesheet {
       ),
     );
   }
+
+  static Future<Sprite> get finishLine {
+    return Sprite.load('finish_line.png', srcSize: Vector2.all(16));
+  }
+  static Future<Sprite> get finishLineInverted {
+    return Sprite.load('finish_line_inverted.png', srcSize: Vector2.all(16));
+  }
 }

@@ -1,19 +1,32 @@
 import 'package:bonfire/bonfire.dart';
+import 'package:npc_neural/game/components/finish_line_tile.dart';
 import 'package:npc_neural/game/components/knight.dart';
 import 'package:npc_neural/game/npc_neural_game.dart';
 import 'package:npc_neural/util/spritesheet.dart';
 
-class Chest extends GameDecoration with DragGesture {
+class FinishLine extends GameDecoration {
   late ShapeHitbox hitbox;
-  Chest({
+  FinishLine({
     required super.position,
-  }) : super.withAnimation(
-          animation: Spritesheet.chest,
-          size: Vector2.all(NpcNeuralGame.tilesize),
-        );
+    required super.size,
+  });
 
   @override
-  Future<void> onLoad() {
+  Future<void> onLoad() async{
+    int countTiles = size.y ~/ NpcNeuralGame.tilesize;
+    final sp = await Spritesheet.finishLine;
+    final spInv = await Spritesheet.finishLineInverted;
+    List.generate(
+      countTiles,
+      (index) {
+        add(
+          FinishLineTile(
+            position: Vector2(0, NpcNeuralGame.tilesize * index),
+            sprite: index%2 == 0 ? sp : spInv,
+          ),
+        );
+      },
+    );
     add(hitbox = RectangleHitbox(size: size));
     return super.onLoad();
   }

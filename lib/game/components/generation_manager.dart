@@ -2,9 +2,8 @@ import 'dart:async';
 
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
-import 'package:npc_neural/game/components/chest.dart';
+import 'package:npc_neural/game/components/finish_line.dart';
 import 'package:npc_neural/game/components/knight.dart';
-import 'package:npc_neural/game/components/spikes_area.dart';
 import 'package:npc_neural/game/npc_neural_game.dart';
 import 'package:npc_neural/util/strage.dart';
 import 'package:synadart/synadart.dart';
@@ -12,10 +11,12 @@ import 'package:synadart/synadart.dart';
 class GenerationManager extends GameComponent with ChangeNotifier {
   static const _checkLivesInvervalKey = 'checkLivesInterval';
   static const int checkLivesInterval = 25;
+  static const int outputNeuros = 4;
   final int individualsCount;
   final Map<int, double> scoreGenerations = {};
   final List<Knight> _individuals = [];
   final double timeScale;
+  final int countKnightEyeLines;
   bool win = false;
 
   static Vector2 get initPosition => Vector2(
@@ -31,7 +32,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
 
   bool startingNew = false;
 
-  Chest? target;
+  FinishLine? target;
   double get lastBestScore =>
       scoreGenerations[scoreGenerations.length - 1] ?? 0;
 
@@ -51,6 +52,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
     this.countProgenitor = 2,
     this.countTurnsByGeneration = 2,
     this.baseNeural,
+    this.countKnightEyeLines = 7,
     required this.storage,
   }) : assert(individualsCount % countProgenitor == 0) {
     _timeCreate = DateTime.now();
@@ -116,6 +118,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
             neuralnetWork: index == 0 && baseNeural != null
                 ? baseNeural!
                 : _createNetwork(baseNeural),
+            countEyeLines: countKnightEyeLines,
           ),
         );
       });
@@ -130,9 +133,12 @@ class GenerationManager extends GameComponent with ChangeNotifier {
     return Sequential(
       learningRate: 0.1,
       layers: [
-        Dense(size: 18, activation: ActivationAlgorithm.relu),
-        Dense(size: 8, activation: ActivationAlgorithm.relu),
-        Dense(size: 4, activation: ActivationAlgorithm.relu),
+        Dense(size: countKnightEyeLines, activation: ActivationAlgorithm.relu),
+        Dense(
+          size: (countKnightEyeLines + outputNeuros) ~/ 2,
+          activation: ActivationAlgorithm.relu,
+        ),
+        Dense(size: outputNeuros, activation: ActivationAlgorithm.relu),
       ],
     );
   }
@@ -176,13 +182,9 @@ class GenerationManager extends GameComponent with ChangeNotifier {
 
   void _startGeneration({bool isFirst = false}) {
     resetInterval(_checkLivesInvervalKey);
-    if (!isFirst) {
-      _resetSpikes();
-      if (_wins[genNumber] == null && countWin > 0) {
-        countWin--;
-      }
+    if (!isFirst && _wins[genNumber] == null && countWin > 0) {
+      countWin--;
     }
-
     _calculateDistanceToTarget();
     _createNewGeneration();
     startingNew = false;
@@ -191,16 +193,18 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   void _calculateScore() {
     if (target != null) {
       for (var element in _individuals) {
-        element.score =
-            maxDistanceToTarget - (element.distance(target!) + element.penalty);
+        final distance = element.position.distanceTo(
+          target!.absoluteCenter,
+        );
+        element.score = maxDistanceToTarget - distance;
       }
     }
   }
 
   void _calculateDistanceToTarget() {
-    target ??= gameRef.query<Chest>().first;
+    target ??= gameRef.query<FinishLine>().first;
     if (maxDistanceToTarget == 0) {
-      maxDistanceToTarget = initPosition.distanceTo(target!.position);
+      maxDistanceToTarget = initPosition.distanceTo(target!.absoluteCenter);
     }
   }
 
@@ -228,12 +232,6 @@ class GenerationManager extends GameComponent with ChangeNotifier {
         );
       },
     );
-  }
-
-  void _resetSpikes() {
-    gameRef.query<SpikesArea>().forEach((element) {
-      element.reset();
-    });
   }
 
   List<Sequential> _createProgenitors() {

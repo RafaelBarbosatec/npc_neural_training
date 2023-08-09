@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
-import 'package:npc_neural/game/components/chest.dart';
+import 'package:npc_neural/game/components/finish_line.dart';
 import 'package:npc_neural/game/components/generation_manager.dart';
 import 'package:npc_neural/game/npc_neural_game.dart';
 import 'package:npc_neural/util/better_neural_listener.dart';
@@ -42,10 +42,13 @@ class Knight extends SimpleAlly with BlockMovementCollision {
   int rank = 0;
   bool get isTheBest => !training ? true : rank == 1;
 
+  final int countEyeLines;
+
   Knight({
     required super.position,
     required this.neuralnetWork,
     this.training = true,
+    this.countEyeLines = 7,
   }) : super(
           size: Vector2.all(NpcNeuralGame.tilesize),
           animation: SimpleDirectionAnimation(
@@ -67,7 +70,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
 
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    if (other is Chest) {
+    if (other is FinishLine) {
       if (training) {
         var manager = BonfireInjector().get<GenerationManager>();
         winner = manager.setWin(this);
@@ -125,15 +128,9 @@ class Knight extends SimpleAlly with BlockMovementCollision {
 
     _watchTheWorld(ignoreHitboxes);
 
-    if (eyesResult.length == 9) {
-      List<double> inputs = [];
-      for (var result in eyesResult) {
-        inputs.add(result.distance);
-        inputs.add(result.isTarget ? 1 : 0);
-      }
-
+    if (eyesResult.length == countEyeLines) {
+      List<double> inputs = eyesResult.map((e) => e.distance).toList();
       final actionresult = neuralnetWork.process(inputs);
-
       _moveByResult(actionresult);
     }
 
@@ -186,12 +183,12 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     super.die();
   }
 
-  Chest? chest;
+  FinishLine? chest;
 
-  Chest? getTarget() {
+  FinishLine? getTarget() {
     if (hasGameRef) {
       if (chest == null) {
-        var query = gameRef.query<Chest>();
+        var query = gameRef.query<FinishLine>();
         if (query.isNotEmpty) {
           return chest = query.first;
         }
@@ -202,7 +199,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     return null;
   }
 
-  List<ShapeHitbox> _getIgnoreHitboxes(Chest chest) {
+  List<ShapeHitbox> _getIgnoreHitboxes(FinishLine chest) {
     List<ShapeHitbox> ignoreHitboxes = gameRef.query<Knight>().map((e) {
       return e.hitbox;
     }).toList();
@@ -212,40 +209,20 @@ class Knight extends SimpleAlly with BlockMovementCollision {
 
   void _watchTheWorld(List<ShapeHitbox> ignoreHitboxes) {
     eyesResult.clear();
-    int countLinePerSquare = 4;
-    double angle = (90 * pi / 180) / countLinePerSquare;
 
-    var r1 = _createRay(0, ignoreHitboxes);
-    if (r1 != null) {
-      eyesResult.add(
-        SeeResult(
-          r1.distance ?? -1,
-          r1.hitbox?.parent is Chest,
-          r1.intersectionPoint,
-        ),
-      );
-    }
-    List.generate(countLinePerSquare, (index) {
-      var r = _createRay(angle * (index + 1), ignoreHitboxes);
-      if (r != null) {
+    double startAngle = (-90 * pi / 180);
+    double angle = (180 * pi / 180) / (countEyeLines - 1);
+
+    List.generate(countEyeLines, (index) {
+      _createRay(startAngle + (angle * index), ignoreHitboxes).let((r) {
         eyesResult.add(
           SeeResult(
             r.distance ?? -1,
-            r.hitbox?.parent is Chest,
+            r.hitbox?.parent is FinishLine,
             r.intersectionPoint,
           ),
         );
-      }
-      var r2 = _createRay(angle * -(index + 1), ignoreHitboxes);
-      if (r2 != null) {
-        eyesResult.add(
-          SeeResult(
-            r2.distance ?? -1,
-            r2.hitbox?.parent is Chest,
-            r2.intersectionPoint,
-          ),
-        );
-      }
+      });
     });
   }
 
@@ -289,13 +266,5 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     if (lastDisplacement.x.abs() < 0.5 && lastDisplacement.y.abs() < 0.5) {
       die();
     }
-    if (chest != null && absoluteCenter.x > chest!.right) {
-      _addPenalty();
-      die();
-    }
-  }
-
-  void _addPenalty() {
-    penalty += 16;
   }
 }
