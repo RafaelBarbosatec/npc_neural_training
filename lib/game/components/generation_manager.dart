@@ -38,7 +38,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   }
 
   int countWin = 0;
-  final Map<int, Sequential> _wins = {};
+  final Map<int, SequentialWithVariation> _wins = {};
   final int countWinToFinish;
   final int countProgenitor;
   final SequentialWithVariation? baseNeural;
@@ -181,6 +181,8 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   void _calculateScore() {
     if (target != null) {
       for (var element in _individuals) {
+        element.score = maxDistanceToTarget - element.distance(target!);
+
         element.score = maxDistanceToTarget - element.distance(target!);
       }
     }
