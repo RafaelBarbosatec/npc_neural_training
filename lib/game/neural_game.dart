@@ -5,6 +5,7 @@ import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
 import 'package:npc_neural/game/components/chest.dart';
 import 'package:npc_neural/game/components/spikes.dart';
+import 'package:npc_neural/game/components/spikes_area.dart';
 import 'package:npc_neural/game/npc_neural_game.dart';
 
 class NeuralGame extends StatelessWidget {
@@ -24,6 +25,10 @@ class NeuralGame extends StatelessWidget {
                   ),
               'spikes': (properties) => Spikes(
                     position: properties.position,
+                  ),
+              'spikes_area': (properties) => SpikesArea(
+                    position: properties.position,
+                    size: properties.size,
                   ),
             },
           ),

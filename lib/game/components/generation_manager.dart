@@ -4,6 +4,7 @@ import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
 import 'package:npc_neural/game/components/chest.dart';
 import 'package:npc_neural/game/components/knight.dart';
+import 'package:npc_neural/game/components/spikes_area.dart';
 import 'package:npc_neural/game/npc_neural_game.dart';
 import 'package:npc_neural/util/strage.dart';
 import 'package:synadart/synadart.dart';
@@ -31,34 +32,36 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   bool startingNew = false;
 
   Chest? target;
-
-  double get lastBestScore {
-    return scoreGenerations[scoreGenerations.length - 1] ?? 0;
-  }
+  double get lastBestScore =>
+      scoreGenerations[scoreGenerations.length - 1] ?? 0;
 
   int countWin = 0;
   final Map<int, Sequential> _wins = {};
   final int countWinToFinish;
   final int countProgenitor;
+  final int countTurnsByGeneration;
   final Sequential? baseNeural;
   final NeuralStorage storage;
+  late DateTime _timeCreate;
 
   GenerationManager({
-    this.individualsCount = 80,
-    this.timeScale = 1.2,
+    this.individualsCount = 60,
+    this.timeScale = 1.5,
     this.countWinToFinish = 4,
     this.countProgenitor = 2,
+    this.countTurnsByGeneration = 2,
     this.baseNeural,
     required this.storage,
-  }) : assert(individualsCount % countProgenitor == 0);
+  }) : assert(individualsCount % countProgenitor == 0) {
+    _timeCreate = DateTime.now();
+  }
 
   bool setWin(Knight knight) {
     if (_wins[genNumber] == null) {
-      knight.score = lastBestScore + 1;
       _wins[genNumber] = knight.neuralnetWork;
       countWin++;
       storage.save(
-        'better-${DateTime.now().toIso8601String()}',
+        'network-train-${_timeCreate.toIso8601String()}',
         knight.neuralnetWork,
       );
 
@@ -82,7 +85,9 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   void onMount() {
     super.onMount();
     gameRef.timeScale = timeScale;
-    Future.delayed(Duration.zero, _startGeneration);
+    Future.delayed(Duration.zero, () {
+      _startGeneration(isFirst: true);
+    });
   }
 
   void _createGeration() {
@@ -125,8 +130,8 @@ class GenerationManager extends GameComponent with ChangeNotifier {
     return Sequential(
       learningRate: 0.1,
       layers: [
-        Dense(size: 6, activation: ActivationAlgorithm.relu),
-        Dense(size: 4, activation: ActivationAlgorithm.relu),
+        Dense(size: 18, activation: ActivationAlgorithm.relu),
+        Dense(size: 8, activation: ActivationAlgorithm.relu),
         Dense(size: 4, activation: ActivationAlgorithm.relu),
       ],
     );
@@ -135,11 +140,12 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   void _createNewGeneration() {
     if (_individuals.isNotEmpty) {
       var bestOfGen = _individuals.first;
-      scoreGenerations[scoreGenerations.length] = bestOfGen.score;
-      _progenitors = _individuals
-          .where((element) => element.rank <= countProgenitor)
-          .map((e) => e.neuralnetWork)
-          .toList();
+      if (bestOfGen.score >= lastBestScore * 0.8) {
+        scoreGenerations[scoreGenerations.length] = bestOfGen.score;
+        _progenitors = _createProgenitors();
+      } else {
+        scoreGenerations[scoreGenerations.length] = lastBestScore;
+      }
     }
     _createGeration();
     notifyListeners();
@@ -168,8 +174,15 @@ class GenerationManager extends GameComponent with ChangeNotifier {
     }
   }
 
-  void _startGeneration() {
+  void _startGeneration({bool isFirst = false}) {
     resetInterval(_checkLivesInvervalKey);
+    if (!isFirst) {
+      _resetSpikes();
+      if (_wins[genNumber] == null && countWin > 0) {
+        countWin--;
+      }
+    }
+
     _calculateDistanceToTarget();
     _createNewGeneration();
     startingNew = false;
@@ -178,7 +191,8 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   void _calculateScore() {
     if (target != null) {
       for (var element in _individuals) {
-        element.score = maxDistanceToTarget - element.distance(target!);
+        element.score =
+            maxDistanceToTarget - (element.distance(target!) + element.penalty);
       }
     }
   }
@@ -214,5 +228,21 @@ class GenerationManager extends GameComponent with ChangeNotifier {
         );
       },
     );
+  }
+
+  void _resetSpikes() {
+    gameRef.query<SpikesArea>().forEach((element) {
+      element.reset();
+    });
+  }
+
+  List<Sequential> _createProgenitors() {
+    var progenitorsProrspect = _individuals.where((element) {
+      return element.rank <= countProgenitor;
+    });
+
+    return progenitorsProrspect.map((e) {
+      return e.neuralnetWork;
+    }).toList();
   }
 }

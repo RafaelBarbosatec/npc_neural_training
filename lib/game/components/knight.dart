@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
 import 'package:npc_neural/game/components/chest.dart';
@@ -7,15 +9,27 @@ import 'package:npc_neural/util/better_neural_listener.dart';
 import 'package:npc_neural/util/spritesheet.dart';
 import 'package:synadart/synadart.dart';
 
+class SeeResult {
+  final double distance;
+  final bool isTarget;
+  final Vector2? intersectionPoint;
+
+  SeeResult(this.distance, this.isTarget, this.intersectionPoint);
+}
+
 class Knight extends SimpleAlly with BlockMovementCollision {
-  final Paint _rayPaint = Paint()
+  final Paint _rayCollisionPaint = Paint()
+    ..color = Colors.red.withOpacity(0.4)
+    ..strokeWidth = 1.2;
+
+  final Paint _rayTargetPaint = Paint()
     ..color = Colors.green.withOpacity(0.4)
-    ..strokeWidth = 1.5;
+    ..strokeWidth = 1.4;
 
   final bool training;
   Sequential neuralnetWork;
   late ShapeHitbox hitbox;
-  List<RaycastResult<ShapeHitbox>> eyesResult = [];
+  List<SeeResult> eyesResult = [];
 
   IntervalTick? lifeTime;
   IntervalTick? checkStopTime;
@@ -24,6 +38,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
   int checkStopInterval = 500;
   bool winner = false;
   double score = 0;
+  double penalty = 0;
   int rank = 0;
   bool get isTheBest => !training ? true : rank == 1;
 
@@ -56,9 +71,8 @@ class Knight extends SimpleAlly with BlockMovementCollision {
       if (training) {
         var manager = BonfireInjector().get<GenerationManager>();
         winner = manager.setWin(this);
-      } else {
-        winner = true;
       }
+      winner = true;
       stopMove();
     } else if (training) {
       die();
@@ -69,7 +83,6 @@ class Knight extends SimpleAlly with BlockMovementCollision {
 
   @override
   void update(double dt) {
-    super.update(dt);
     if (!isDead && !winner) {
       if (checkInterval('execNeural', 25, dt)) {
         _execNetwork(dt);
@@ -80,15 +93,16 @@ class Knight extends SimpleAlly with BlockMovementCollision {
         checkStopTime?.update(dt);
       }
     }
+    super.update(dt);
   }
 
   @override
   void render(Canvas canvas) {
     if (rank < 20 && !isDead) {
-      super.render(canvas);
       if (isTheBest) {
         _renderRayCast(canvas);
       }
+      super.render(canvas);
     }
   }
 
@@ -111,9 +125,12 @@ class Knight extends SimpleAlly with BlockMovementCollision {
 
     _watchTheWorld(ignoreHitboxes);
 
-    if (eyesResult.length == 5) {
-      List<double> inputs = eyesResult.map((e) => e.distance ?? 0).toList();
-      inputs.add(angleTo(chest.absolutePosition));
+    if (eyesResult.length == 9) {
+      List<double> inputs = [];
+      for (var result in eyesResult) {
+        inputs.add(result.distance);
+        inputs.add(result.isTarget ? 1 : 0);
+      }
 
       final actionresult = neuralnetWork.process(inputs);
 
@@ -127,12 +144,14 @@ class Knight extends SimpleAlly with BlockMovementCollision {
 
   void _renderRayCast(Canvas canvas) {
     for (var result in eyesResult) {
-      final intersectionPoint = result.intersectionPoint!.toOffset();
-      canvas.drawLine(
-        absoluteCenter.toOffset() - position.toOffset(),
-        intersectionPoint - position.toOffset(),
-        _rayPaint,
-      );
+      final intersectionPoint = result.intersectionPoint?.toOffset();
+      if (intersectionPoint != null) {
+        canvas.drawLine(
+          absoluteCenter.toOffset() - position.toOffset(),
+          intersectionPoint - position.toOffset(),
+          result.isTarget ? _rayTargetPaint : _rayCollisionPaint,
+        );
+      }
     }
   }
 
@@ -149,12 +168,13 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     );
   }
 
-  void reset(Vector2 position, Sequential? newNetwork) {
+  void reset(Vector2 position, Sequential newNetwork) {
     this.position = position;
-    neuralnetWork = newNetwork ?? neuralnetWork;
+    neuralnetWork = newNetwork;
     winner = false;
     rank = 0;
     score = 0;
+    penalty = 0;
     _createTimers();
     revive();
     stopMove(forceIdle: true);
@@ -183,40 +203,50 @@ class Knight extends SimpleAlly with BlockMovementCollision {
   }
 
   List<ShapeHitbox> _getIgnoreHitboxes(Chest chest) {
-    List<ShapeHitbox> ignoreHitboxes =
-        gameRef.query<Knight>().map((e) => e.hitbox).toList();
-    ignoreHitboxes.add(chest.hitbox);
+    List<ShapeHitbox> ignoreHitboxes = gameRef.query<Knight>().map((e) {
+      return e.hitbox;
+    }).toList();
+
     return ignoreHitboxes;
   }
 
   void _watchTheWorld(List<ShapeHitbox> ignoreHitboxes) {
     eyesResult.clear();
+    int countLinePerSquare = 4;
+    double angle = (90 * pi / 180) / countLinePerSquare;
 
     var r1 = _createRay(0, ignoreHitboxes);
     if (r1 != null) {
-      eyesResult.add(r1);
+      eyesResult.add(
+        SeeResult(
+          r1.distance ?? -1,
+          r1.hitbox?.parent is Chest,
+          r1.intersectionPoint,
+        ),
+      );
     }
-
-    var r2 = _createRay(0.349066, ignoreHitboxes);
-    if (r2 != null) {
-      eyesResult.add(r2);
-    }
-
-    var r3 = _createRay(0.698132, ignoreHitboxes);
-    if (r3 != null) {
-      eyesResult.add(r3);
-    }
-
-    var r5 = _createRay(-0.349066, ignoreHitboxes);
-    if (r5 != null) {
-      eyesResult.add(r5);
-    }
-
-    var r6 = _createRay(-0.698132, ignoreHitboxes);
-    if (r6 != null) {
-      eyesResult.add(r6);
-    }
-
+    List.generate(countLinePerSquare, (index) {
+      var r = _createRay(angle * (index + 1), ignoreHitboxes);
+      if (r != null) {
+        eyesResult.add(
+          SeeResult(
+            r.distance ?? -1,
+            r.hitbox?.parent is Chest,
+            r.intersectionPoint,
+          ),
+        );
+      }
+      var r2 = _createRay(angle * -(index + 1), ignoreHitboxes);
+      if (r2 != null) {
+        eyesResult.add(
+          SeeResult(
+            r2.distance ?? -1,
+            r2.hitbox?.parent is Chest,
+            r2.intersectionPoint,
+          ),
+        );
+      }
+    });
   }
 
   void _moveByResult(List<double> actionresult) {
@@ -256,11 +286,16 @@ class Knight extends SimpleAlly with BlockMovementCollision {
   }
 
   void _tickCheckStoped() {
-    if (lastDisplacement.x.abs() < 0.7 && lastDisplacement.y.abs() < 0.7) {
+    if (lastDisplacement.x.abs() < 0.5 && lastDisplacement.y.abs() < 0.5) {
       die();
     }
-    if (chest != null && absoluteCenter.x > chest!.absoluteCenter.x) {
+    if (chest != null && absoluteCenter.x > chest!.right) {
+      _addPenalty();
       die();
     }
+  }
+
+  void _addPenalty() {
+    penalty += 16;
   }
 }
