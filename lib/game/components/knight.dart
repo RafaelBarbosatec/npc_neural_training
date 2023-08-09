@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:npc_neural/game/components/chest.dart';
 import 'package:npc_neural/game/components/generation_manager.dart';
 import 'package:npc_neural/game/npc_neural_game.dart';
+import 'package:npc_neural/neural_network_utils/models/sequential_with_vatiation.dart';
 import 'package:npc_neural/util/better_neural_listener.dart';
 import 'package:npc_neural/util/spritesheet.dart';
-import 'package:synadart/synadart.dart';
 
 class Knight extends SimpleAlly with BlockMovementCollision {
   final Paint _rayPaint = Paint()
@@ -13,7 +13,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     ..strokeWidth = 1.5;
 
   final bool training;
-  Sequential neuralnetWork;
+  SequentialWithVariation neuralnetWork;
   late ShapeHitbox hitbox;
   List<RaycastResult<ShapeHitbox>> eyesResult = [];
 
@@ -149,7 +149,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     );
   }
 
-  void reset(Vector2 position, Sequential? newNetwork) {
+  void reset(Vector2 position, SequentialWithVariation? newNetwork) {
     this.position = position;
     neuralnetWork = newNetwork ?? neuralnetWork;
     winner = false;
@@ -216,7 +216,6 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     if (r6 != null) {
       eyesResult.add(r6);
     }
-
   }
 
   void _moveByResult(List<double> actionresult) {

@@ -14,10 +14,7 @@ dependencies:
   neurons_tree_widget: ^0.0.1
   d_chart: ^2.3.0
   shared_preferences: ^2.2.0
-  synadart:
-    git: 
-      url: https://github.com/RafaelBarbosatec/synadart
-      ref: b083d201975508b7ec46410a3eb48adbdd509406
+  synadart: ^0.4.5
 
 dev_dependencies:
   flutter_test:

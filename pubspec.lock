@@ -368,11 +368,10 @@ packages:
   synadart:
     dependency: "direct main"
     description:
-      path: "."
-      ref: b083d201975508b7ec46410a3eb48adbdd509406
-      resolved-ref: b083d201975508b7ec46410a3eb48adbdd509406
-      url: "https://github.com/RafaelBarbosatec/synadart"
-    source: git
+      name: synadart
+      sha256: b0d87ca681737cd9a268cfacc40d222460d66d411ac6b129255676b9580bb6ba
+      url: "https://pub.dev"
+    source: hosted
     version: "0.4.5"
   term_glyph:
     dependency: transitive

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:npc_neural/game/components/chest.dart';
 import 'package:npc_neural/game/components/knight.dart';
 import 'package:npc_neural/game/npc_neural_game.dart';
+import 'package:npc_neural/neural_network_utils/models.dart';
 import 'package:npc_neural/util/strage.dart';
 import 'package:synadart/synadart.dart';
 
@@ -24,7 +25,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
 
   int get genNumber => scoreGenerations.length;
 
-  List<Sequential> _progenitors = [];
+  List<SequentialWithVariation> _progenitors = [];
 
   double maxDistanceToTarget = 0;
 
@@ -40,7 +41,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   final Map<int, Sequential> _wins = {};
   final int countWinToFinish;
   final int countProgenitor;
-  final Sequential? baseNeural;
+  final SequentialWithVariation? baseNeural;
   final NeuralStorage storage;
 
   GenerationManager({
@@ -118,16 +119,18 @@ class GenerationManager extends GameComponent with ChangeNotifier {
     }
   }
 
-  Sequential _createNetwork(Sequential? mainNeuralNetwork) {
+  SequentialWithVariation _createNetwork(
+    SequentialWithVariation? mainNeuralNetwork,
+  ) {
     if (mainNeuralNetwork != null) {
       return mainNeuralNetwork.variation();
     }
-    return Sequential(
-      learningRate: 0.1,
+    return SequentialWithVariation(
+      learningRate: 0.01,
       layers: [
-        Dense(size: 6, activation: ActivationAlgorithm.relu),
-        Dense(size: 4, activation: ActivationAlgorithm.relu),
-        Dense(size: 4, activation: ActivationAlgorithm.relu),
+        DenseLayerWithActivation(size: 6, activation: ActivationAlgorithm.relu),
+        DenseLayerWithActivation(size: 4, activation: ActivationAlgorithm.relu),
+        DenseLayerWithActivation(size: 4, activation: ActivationAlgorithm.relu),
       ],
     );
   }

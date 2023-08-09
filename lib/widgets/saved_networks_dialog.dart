@@ -3,15 +3,15 @@ import 'dart:convert';
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:npc_neural/neural_network_utils/models.dart';
 import 'package:npc_neural/util/strage.dart';
-import 'package:synadart/synadart.dart';
 
 class SavedNetworksDialog extends StatefulWidget {
-  final Function(Sequential value, bool train) networkSlected;
+  final Function(SequentialWithVariation value, bool train) networkSlected;
   const SavedNetworksDialog({super.key, required this.networkSlected});
 
   static show(BuildContext context,
-      Function(Sequential value, bool train) networkSlected) {
+      Function(SequentialWithVariation value, bool train) networkSlected) {
     return showDialog(
       context: context,
       builder: (context) {
