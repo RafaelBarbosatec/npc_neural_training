@@ -60,6 +60,8 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     _createTimers();
   }
 
+  double get maxDistanceVision => NpcNeuralGame.tilesize * 3;
+
   @override
   bool onComponentTypeCheck(PositionComponent other) {
     if (other is Knight) {
@@ -121,10 +123,10 @@ class Knight extends SimpleAlly with BlockMovementCollision {
   }
 
   void _execNetwork(double dt) {
-    var chest = getTarget();
-    if (chest == null) return;
+    var target = getTarget();
+    if (target == null) return;
 
-    List<ShapeHitbox> ignoreHitboxes = _getIgnoreHitboxes(chest);
+    List<ShapeHitbox> ignoreHitboxes = _getIgnoreHitboxes(target);
 
     _watchTheWorld(ignoreHitboxes);
 
@@ -150,7 +152,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
           intersection,
           p,
         );
-        canvas.drawCircle(intersection, 4, p);
+        canvas.drawCircle(intersection, 3, p);
       }
     }
   }
@@ -165,6 +167,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
         direction: Vector2(1, 0)..rotate(angle),
       ),
       ignoreHitboxes: ignoreHitboxes,
+      maxDistance: maxDistanceVision,
     );
   }
 
@@ -186,27 +189,27 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     super.die();
   }
 
-  FinishLine? chest;
+  FinishLine? _target;
 
   FinishLine? getTarget() {
     if (hasGameRef) {
-      if (chest == null) {
+      if (_target == null) {
         var query = gameRef.query<FinishLine>();
         if (query.isNotEmpty) {
-          return chest = query.first;
+          return _target = query.first;
         }
       } else {
-        return chest;
+        return _target;
       }
     }
     return null;
   }
 
-  List<ShapeHitbox> _getIgnoreHitboxes(FinishLine chest) {
+  List<ShapeHitbox> _getIgnoreHitboxes(FinishLine target) {
     List<ShapeHitbox> ignoreHitboxes = gameRef.query<Knight>().map((e) {
       return e.hitbox;
     }).toList();
-
+    ignoreHitboxes.add(target.hitbox);
     return ignoreHitboxes;
   }
 
@@ -217,15 +220,14 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     double angle = (180 * pi / 180) / (countEyeLines - 1);
 
     List.generate(countEyeLines, (index) {
-      _createRay(startAngle + (angle * index), ignoreHitboxes).let((r) {
-        eyesResult.add(
-          SeeResult(
-            r.distance ?? -1,
-            r.hitbox?.parent is FinishLine,
-            r.intersectionPoint,
-          ),
-        );
-      });
+      final r = _createRay(startAngle + (angle * index), ignoreHitboxes);
+      eyesResult.add(
+        SeeResult(
+          r?.distance ?? maxDistanceVision,
+          r?.hitbox?.parent is FinishLine,
+          r?.intersectionPoint,
+        ),
+      );
     });
   }
 

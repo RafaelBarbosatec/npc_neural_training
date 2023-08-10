@@ -40,17 +40,15 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   final Map<int, Sequential> _wins = {};
   final int countWinToFinish;
   final int countProgenitor;
-  final int countTurnsByGeneration;
   final Sequential? baseNeural;
   final NeuralStorage storage;
   late DateTime _timeCreate;
 
   GenerationManager({
-    this.individualsCount = 60,
+    this.individualsCount = 80,
     this.timeScale = 1.5,
     this.countWinToFinish = 4,
     this.countProgenitor = 2,
-    this.countTurnsByGeneration = 2,
     this.baseNeural,
     this.countKnightEyeLines = 7,
     required this.storage,
@@ -146,11 +144,10 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   void _createNewGeneration() {
     if (_individuals.isNotEmpty) {
       var bestOfGen = _individuals.first;
+      scoreGenerations[scoreGenerations.length] = lastBestScore;
       if (bestOfGen.score >= lastBestScore * 0.8) {
         scoreGenerations[scoreGenerations.length] = bestOfGen.score;
         _progenitors = _createProgenitors();
-      } else {
-        scoreGenerations[scoreGenerations.length] = lastBestScore;
       }
     }
     _createGeration();
@@ -169,7 +166,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
 
     bool anyLive = false;
     for (var element in _individuals) {
-      if (!element.isDead) {
+      if (!element.isDead && !element.winner) {
         anyLive = true;
       }
       element.rank = _individuals.indexOf(element) + 1;

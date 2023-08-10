@@ -70,7 +70,6 @@
         {
          "draworder":"topdown",
          "id":4,
-         "locked":true,
          "name":"objects",
          "objects":[
                 {
@@ -268,30 +267,8 @@
                  "rotation":0,
                  "visible":true,
                  "width":16,
-                 "x":295.5,
+                 "x":304,
                  "y":80
-                }, 
-                {
-                 "class":"",
-                 "height":16,
-                 "id":47,
-                 "name":"spikes",
-                 "rotation":0,
-                 "visible":true,
-                 "width":16,
-                 "x":327.75,
-                 "y":47.75
-                }, 
-                {
-                 "class":"",
-                 "height":16,
-                 "id":48,
-                 "name":"spikes",
-                 "rotation":0,
-                 "visible":true,
-                 "width":16,
-                 "x":328.25,
-                 "y":112
                 }],
          "opacity":1,
          "type":"objectgroup",
