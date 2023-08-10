@@ -31,8 +31,6 @@ class GenerationManager extends GameComponent with ChangeNotifier {
 
   double maxDistanceToTarget = 0;
 
-  bool startingNew = false;
-
   FinishLine? target;
   double get lastBestScore =>
       scoreGenerations[scoreGenerations.length - 1] ?? 0;
@@ -146,38 +144,18 @@ class GenerationManager extends GameComponent with ChangeNotifier {
     );
   }
 
-  void _createNewGeneration() {
-    if (_individuals.isNotEmpty) {
-      var bestOfGen = _individuals.first;
-      scoreGenerations[scoreGenerations.length] = lastBestScore;
-      if (bestOfGen.score >= lastBestScore * 0.8) {
-        scoreGenerations[scoreGenerations.length] = bestOfGen.score;
-        _progenitors = _createProgenitors();
-      }
-    }
+  void _sratNewGeneration() {
+    _analyseGeneration();
     _createGeration();
     notifyListeners();
   }
 
   void _checkAllAlive() {
-    if (startingNew) return;
     _calculateScore();
+    _orderIndividuals();
 
-    _individuals.sort(
-      (a, b) {
-        return b.score.compareTo(a.score);
-      },
-    );
-
-    bool anyLive = false;
-    for (var element in _individuals) {
-      if (!element.isDead && !element.winner) {
-        anyLive = true;
-      }
-      element.rank = _individuals.indexOf(element) + 1;
-    }
+    bool anyLive = _updateRankAndCheckAnyLive();
     if (!anyLive) {
-      startingNew = true;
       _startGeneration();
     }
   }
@@ -188,8 +166,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
       countWin--;
     }
     _calculateDistanceToTarget();
-    _createNewGeneration();
-    startingNew = false;
+    _sratNewGeneration();
   }
 
   void _calculateScore() {
@@ -204,8 +181,8 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   }
 
   void _calculateDistanceToTarget() {
-    target ??= gameRef.query<FinishLine>().first;
     if (maxDistanceToTarget == 0) {
+      target ??= gameRef.query<FinishLine>().first;
       maxDistanceToTarget = initPosition.distanceTo(target!.absoluteCenter);
     }
   }
@@ -244,5 +221,35 @@ class GenerationManager extends GameComponent with ChangeNotifier {
     return progenitorsProrspect.map((e) {
       return e.neuralnetWork;
     }).toList();
+  }
+
+  void _orderIndividuals() {
+    _individuals.sort(
+      (a, b) {
+        return b.score.compareTo(a.score);
+      },
+    );
+  }
+
+  bool _updateRankAndCheckAnyLive() {
+    bool anyLive = false;
+    for (var element in _individuals) {
+      if (!element.isDead && !element.winner) {
+        anyLive = true;
+      }
+      element.rank = _individuals.indexOf(element) + 1;
+    }
+    return anyLive;
+  }
+
+  void _analyseGeneration() {
+    if (_individuals.isNotEmpty) {
+      var bestOfGen = _individuals.first;
+      scoreGenerations[scoreGenerations.length] = lastBestScore;
+      if (bestOfGen.score >= lastBestScore * 0.8) {
+        scoreGenerations[scoreGenerations.length] = bestOfGen.score;
+        _progenitors = _createProgenitors();
+      }
+    }
   }
 }

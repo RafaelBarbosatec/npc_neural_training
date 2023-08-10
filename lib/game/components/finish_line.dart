@@ -26,7 +26,12 @@ class FinishLine extends GameDecoration {
         );
       },
     );
-    add(hitbox = RectangleHitbox(size: size));
+    add(
+      hitbox = RectangleHitbox(
+        size: size,
+        isSolid: true,
+      ),
+    );
     return super.onLoad();
   }
 }
