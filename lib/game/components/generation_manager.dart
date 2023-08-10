@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:npc_neural/game/components/finish_line.dart';
 import 'package:npc_neural/game/components/knight.dart';
 import 'package:npc_neural/game/npc_neural_game.dart';
+import 'package:npc_neural/neural_network_utils/models.dart';
 import 'package:npc_neural/util/strage.dart';
 import 'package:synadart/synadart.dart';
 
@@ -26,7 +27,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
 
   int get genNumber => scoreGenerations.length;
 
-  List<Sequential> _progenitors = [];
+  List<SequentialWithVariation> _progenitors = [];
 
   double maxDistanceToTarget = 0;
 
@@ -37,10 +38,10 @@ class GenerationManager extends GameComponent with ChangeNotifier {
       scoreGenerations[scoreGenerations.length - 1] ?? 0;
 
   int countWin = 0;
-  final Map<int, Sequential> _wins = {};
+  final Map<int, SequentialWithVariation> _wins = {};
   final int countWinToFinish;
   final int countProgenitor;
-  final Sequential? baseNeural;
+  final SequentialWithVariation? baseNeural;
   final NeuralStorage storage;
   late DateTime _timeCreate;
 
@@ -124,19 +125,23 @@ class GenerationManager extends GameComponent with ChangeNotifier {
     }
   }
 
-  Sequential _createNetwork(Sequential? mainNeuralNetwork) {
+  SequentialWithVariation _createNetwork(
+    SequentialWithVariation? mainNeuralNetwork,
+  ) {
     if (mainNeuralNetwork != null) {
       return mainNeuralNetwork.variation();
     }
-    return Sequential(
-      learningRate: 0.1,
+    return SequentialWithVariation(
+      learningRate: 0.01,
       layers: [
-        Dense(size: countKnightEyeLines, activation: ActivationAlgorithm.relu),
-        Dense(
+        DenseLayerWithActivation(
+            size: countKnightEyeLines, activation: ActivationAlgorithm.relu),
+        DenseLayerWithActivation(
           size: (countKnightEyeLines + outputNeuros) ~/ 2,
           activation: ActivationAlgorithm.relu,
         ),
-        Dense(size: outputNeuros, activation: ActivationAlgorithm.relu),
+        DenseLayerWithActivation(
+            size: outputNeuros, activation: ActivationAlgorithm.relu),
       ],
     );
   }
@@ -231,7 +236,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
     );
   }
 
-  List<Sequential> _createProgenitors() {
+  List<SequentialWithVariation> _createProgenitors() {
     var progenitorsProrspect = _individuals.where((element) {
       return element.rank <= countProgenitor;
     });

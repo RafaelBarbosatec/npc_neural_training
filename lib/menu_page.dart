@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:npc_neural/game/npc_neural_game.dart';
+import 'package:npc_neural/neural_network_utils/models.dart';
 import 'package:npc_neural/widgets/saved_networks_dialog.dart';
-import 'package:synadart/synadart.dart';
 
 class MenuPage extends StatelessWidget {
   const MenuPage({super.key});
@@ -107,8 +107,11 @@ class MenuPage extends StatelessWidget {
     );
   }
 
-  void _goToGame(BuildContext context,
-      {Sequential? sequential, bool train = true}) {
+  void _goToGame(
+    BuildContext context, {
+    SequentialWithVariation? sequential,
+    bool train = true,
+  }) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => NpcNeuralGame(
@@ -121,9 +124,9 @@ class MenuPage extends StatelessWidget {
 
   void _loadModel(BuildContext context, String path, bool train) async {
     String data = await DefaultAssetBundle.of(context).loadString(path);
-    Sequential s = Sequential.fromMap(jsonDecode(data));
+    final neuralNetwork = SequentialWithVariation.fromMap(jsonDecode(data));
     if (context.mounted) {
-      _goToGame(context, sequential: s, train: train);
+      _goToGame(context, sequential: neuralNetwork, train: train);
     }
   }
 }

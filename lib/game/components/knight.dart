@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:npc_neural/game/components/finish_line.dart';
 import 'package:npc_neural/game/components/generation_manager.dart';
 import 'package:npc_neural/game/npc_neural_game.dart';
+import 'package:npc_neural/neural_network_utils/models/sequential_with_vatiation.dart';
 import 'package:npc_neural/util/better_neural_listener.dart';
 import 'package:npc_neural/util/spritesheet.dart';
-import 'package:synadart/synadart.dart';
 
 class SeeResult {
   final double distance;
@@ -27,7 +27,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     ..strokeWidth = 1.4;
 
   final bool training;
-  Sequential neuralnetWork;
+  SequentialWithVariation neuralnetWork;
   late ShapeHitbox hitbox;
   List<SeeResult> eyesResult = [];
 
@@ -171,7 +171,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     );
   }
 
-  void reset(Vector2 position, Sequential newNetwork) {
+  void reset(Vector2 position, SequentialWithVariation newNetwork) {
     this.position = position;
     neuralnetWork = newNetwork;
     winner = false;
