@@ -23,11 +23,12 @@ class SequentialWithVariation extends Sequential {
   }
 
   /// Loads a model from a JSON .
-  static SequentialWithVariation fromMap(Map<String, dynamic> data) {
-    final learningRate = data[learningRateField];
-    final layersJsonList = data[layersField] as Iterable<Map<String, dynamic>>;
-    final layers = layersJsonList.map(LayerWithActivation.fromMap).toList();
-    return SequentialWithVariation(learningRate: learningRate, layers: layers);
+  SequentialWithVariation.fromMap(Map<String, dynamic> data)
+      : super(learningRate: 0) {
+    learningRate = data[learningRateField];
+    for (Map<String, dynamic> layer in data[layersField]) {
+      layers.add(LayerWithActivation.fromMap(layer));
+    }
   }
 
   /// Save the model to a JSON.
