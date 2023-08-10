@@ -75,7 +75,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     if (other is FinishLine) {
       if (training) {
         var manager = BonfireInjector().get<GenerationManager>();
-        winner = manager.setWin(this);
+        manager.setWin(this);
       }
       winner = true;
       stopMove();

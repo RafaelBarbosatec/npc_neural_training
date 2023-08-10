@@ -55,21 +55,16 @@ class GenerationManager extends GameComponent with ChangeNotifier {
     _timeCreate = DateTime.now();
   }
 
-  bool setWin(Knight knight) {
+  void setWin(Knight knight) {
     if (_wins[genNumber] == null) {
       _wins[genNumber] = knight.neuralnetWork;
       countWin++;
-      storage.save(
-        'network-train-${_timeCreate.toIso8601String()}',
-        knight.neuralnetWork,
-      );
-
+      _saveNeural(knight.neuralnetWork);
       if (countWin == countWinToFinish && !win) {
         _showDialog();
-        return win = true;
+        win = true;
       }
     }
-    return false;
   }
 
   @override
@@ -133,13 +128,17 @@ class GenerationManager extends GameComponent with ChangeNotifier {
       learningRate: 0.01,
       layers: [
         DenseLayerWithActivation(
-            size: countKnightEyeLines, activation: ActivationAlgorithm.relu),
+          size: countKnightEyeLines,
+          activation: ActivationAlgorithm.relu,
+        ),
         DenseLayerWithActivation(
           size: (countKnightEyeLines + outputNeuros) ~/ 2,
           activation: ActivationAlgorithm.relu,
         ),
         DenseLayerWithActivation(
-            size: outputNeuros, activation: ActivationAlgorithm.relu),
+          size: outputNeuros,
+          activation: ActivationAlgorithm.relu,
+        ),
       ],
     );
   }
@@ -251,5 +250,12 @@ class GenerationManager extends GameComponent with ChangeNotifier {
         _progenitors = _createProgenitors();
       }
     }
+  }
+
+  void _saveNeural(SequentialWithVariation neuralnetWork) {
+    storage.save(
+      'network-train-${_timeCreate.toIso8601String()}',
+      neuralnetWork,
+    );
   }
 }
