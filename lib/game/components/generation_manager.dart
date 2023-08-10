@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
-import 'package:npc_neural/game/components/chest.dart';
+import 'package:npc_neural/game/components/finish_line.dart';
 import 'package:npc_neural/game/components/knight.dart';
 import 'package:npc_neural/game/npc_neural_game.dart';
 import 'package:npc_neural/neural_network_utils/models.dart';
@@ -12,10 +12,12 @@ import 'package:synadart/synadart.dart';
 class GenerationManager extends GameComponent with ChangeNotifier {
   static const _checkLivesInvervalKey = 'checkLivesInterval';
   static const int checkLivesInterval = 25;
+  static const int outputNeuros = 4;
   final int individualsCount;
   final Map<int, double> scoreGenerations = {};
   final List<Knight> _individuals = [];
   final double timeScale;
+  final int countKnightEyeLines;
   bool win = false;
 
   static Vector2 get initPosition => Vector2(
@@ -29,13 +31,9 @@ class GenerationManager extends GameComponent with ChangeNotifier {
 
   double maxDistanceToTarget = 0;
 
-  bool startingNew = false;
-
-  Chest? target;
-
-  double get lastBestScore {
-    return scoreGenerations[scoreGenerations.length - 1] ?? 0;
-  }
+  FinishLine? target;
+  double get lastBestScore =>
+      scoreGenerations[scoreGenerations.length - 1] ?? 0;
 
   int countWin = 0;
   final Map<int, SequentialWithVariation> _wins = {};
@@ -43,32 +41,30 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   final int countProgenitor;
   final SequentialWithVariation? baseNeural;
   final NeuralStorage storage;
+  late DateTime _timeCreate;
 
   GenerationManager({
     this.individualsCount = 80,
-    this.timeScale = 1.2,
+    this.timeScale = 1.5,
     this.countWinToFinish = 4,
     this.countProgenitor = 2,
     this.baseNeural,
+    this.countKnightEyeLines = 7,
     required this.storage,
-  }) : assert(individualsCount % countProgenitor == 0);
+  }) : assert(individualsCount % countProgenitor == 0) {
+    _timeCreate = DateTime.now();
+  }
 
-  bool setWin(Knight knight) {
+  void setWin(Knight knight) {
     if (_wins[genNumber] == null) {
-      knight.score = lastBestScore + 1;
       _wins[genNumber] = knight.neuralnetWork;
       countWin++;
-      storage.save(
-        'better-${DateTime.now().toIso8601String()}',
-        knight.neuralnetWork,
-      );
-
+      _saveNeural(knight.neuralnetWork);
       if (countWin == countWinToFinish && !win) {
         _showDialog();
-        return win = true;
+        win = true;
       }
     }
-    return false;
   }
 
   @override
@@ -83,7 +79,9 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   void onMount() {
     super.onMount();
     gameRef.timeScale = timeScale;
-    Future.delayed(Duration.zero, _startGeneration);
+    Future.delayed(Duration.zero, () {
+      _startGeneration(isFirst: true);
+    });
   }
 
   void _createGeration() {
@@ -112,6 +110,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
             neuralnetWork: index == 0 && baseNeural != null
                 ? baseNeural!
                 : _createNetwork(baseNeural),
+            countEyeLines: countKnightEyeLines,
           ),
         );
       });
@@ -128,70 +127,62 @@ class GenerationManager extends GameComponent with ChangeNotifier {
     return SequentialWithVariation(
       learningRate: 0.01,
       layers: [
-        DenseLayerWithActivation(size: 6, activation: ActivationAlgorithm.relu),
-        DenseLayerWithActivation(size: 4, activation: ActivationAlgorithm.relu),
-        DenseLayerWithActivation(size: 4, activation: ActivationAlgorithm.relu),
+        DenseLayerWithActivation(
+          size: countKnightEyeLines,
+          activation: ActivationAlgorithm.relu,
+        ),
+        DenseLayerWithActivation(
+          size: (countKnightEyeLines + outputNeuros) ~/ 2,
+          activation: ActivationAlgorithm.relu,
+        ),
+        DenseLayerWithActivation(
+          size: outputNeuros,
+          activation: ActivationAlgorithm.relu,
+        ),
       ],
     );
   }
 
-  void _createNewGeneration() {
-    if (_individuals.isNotEmpty) {
-      var bestOfGen = _individuals.first;
-      scoreGenerations[scoreGenerations.length] = bestOfGen.score;
-      _progenitors = _individuals
-          .where((element) => element.rank <= countProgenitor)
-          .map((e) => e.neuralnetWork)
-          .toList();
-    }
+  void _sratNewGeneration() {
+    _analyseGeneration();
     _createGeration();
     notifyListeners();
   }
 
   void _checkAllAlive() {
-    if (startingNew) return;
     _calculateScore();
+    _orderIndividuals();
 
-    _individuals.sort(
-      (a, b) {
-        return b.score.compareTo(a.score);
-      },
-    );
-
-    bool anyLive = false;
-    for (var element in _individuals) {
-      if (!element.isDead) {
-        anyLive = true;
-      }
-      element.rank = _individuals.indexOf(element) + 1;
-    }
+    bool anyLive = _updateRankAndCheckAnyLive();
     if (!anyLive) {
-      startingNew = true;
       _startGeneration();
     }
   }
 
-  void _startGeneration() {
+  void _startGeneration({bool isFirst = false}) {
     resetInterval(_checkLivesInvervalKey);
+    if (!isFirst && _wins[genNumber] == null && countWin > 0) {
+      countWin--;
+    }
     _calculateDistanceToTarget();
-    _createNewGeneration();
-    startingNew = false;
+    _sratNewGeneration();
   }
 
   void _calculateScore() {
     if (target != null) {
       for (var element in _individuals) {
-        element.score = maxDistanceToTarget - element.distance(target!);
-
-        element.score = maxDistanceToTarget - element.distance(target!);
+        final distance = element.position.distanceTo(
+          target!.absoluteCenter,
+        );
+        element.score = maxDistanceToTarget - distance;
       }
     }
   }
 
   void _calculateDistanceToTarget() {
-    target ??= gameRef.query<Chest>().first;
     if (maxDistanceToTarget == 0) {
-      maxDistanceToTarget = initPosition.distanceTo(target!.position);
+      target ??= gameRef.query<FinishLine>().first;
+      maxDistanceToTarget = initPosition.distanceTo(target!.absoluteCenter);
     }
   }
 
@@ -218,6 +209,53 @@ class GenerationManager extends GameComponent with ChangeNotifier {
           ],
         );
       },
+    );
+  }
+
+  List<SequentialWithVariation> _createProgenitors() {
+    var progenitorsProrspect = _individuals.where((element) {
+      return element.rank <= countProgenitor;
+    });
+
+    return progenitorsProrspect.map((e) {
+      return e.neuralnetWork;
+    }).toList();
+  }
+
+  void _orderIndividuals() {
+    _individuals.sort(
+      (a, b) {
+        return b.score.compareTo(a.score);
+      },
+    );
+  }
+
+  bool _updateRankAndCheckAnyLive() {
+    bool anyLive = false;
+    for (var element in _individuals) {
+      if (!element.isDead && !element.winner) {
+        anyLive = true;
+      }
+      element.rank = _individuals.indexOf(element) + 1;
+    }
+    return anyLive;
+  }
+
+  void _analyseGeneration() {
+    if (_individuals.isNotEmpty) {
+      var bestOfGen = _individuals.first;
+      scoreGenerations[scoreGenerations.length] = lastBestScore;
+      if (bestOfGen.score >= lastBestScore * 0.8) {
+        scoreGenerations[scoreGenerations.length] = bestOfGen.score;
+        _progenitors = _createProgenitors();
+      }
+    }
+  }
+
+  void _saveNeural(SequentialWithVariation neuralnetWork) {
+    storage.save(
+      'network-train-${_timeCreate.toIso8601String()}',
+      neuralnetWork,
     );
   }
 }

@@ -23,23 +23,6 @@ class Spritesheet {
     );
   }
 
-  static Future<SpriteAnimation> get chest {
-    return SpriteAnimation.load(
-      'chest_spritesheet.png',
-      SpriteAnimationData.sequenced(
-        amount: 8,
-        stepTime: 0.1,
-        textureSize: Vector2.all(16),
-      ),
-    );
-  }
-
-  static Future<SpriteAnimation> get chestOpen {
-    return Sprite.load(
-      'chest_open.png',
-    ).toAnimation();
-  }
-
   static Future<SpriteAnimation> get fireball {
     return SpriteAnimation.load(
       'fireball_right.png',
@@ -60,5 +43,13 @@ class Spritesheet {
         textureSize: Vector2.all(16),
       ),
     );
+  }
+
+  static Future<Sprite> get finishLine {
+    return Sprite.load('finish_line.png', srcSize: Vector2.all(16));
+  }
+
+  static Future<Sprite> get finishLineInverted {
+    return Sprite.load('finish_line_inverted.png', srcSize: Vector2.all(16));
   }
 }

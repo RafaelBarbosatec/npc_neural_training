@@ -11,9 +11,7 @@ class Spikes extends GameDecoration with DragGesture {
 
   @override
   Future<void> onLoad() {
-    add(
-      RectangleHitbox(size: size, isSolid: true),
-    );
+    add(RectangleHitbox(size: size, isSolid: true));
     return super.onLoad();
   }
 }

@@ -1,21 +1,35 @@
+import 'dart:math';
+
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
-import 'package:npc_neural/game/components/chest.dart';
+import 'package:npc_neural/game/components/finish_line.dart';
 import 'package:npc_neural/game/components/generation_manager.dart';
 import 'package:npc_neural/game/npc_neural_game.dart';
 import 'package:npc_neural/neural_network_utils/models/sequential_with_vatiation.dart';
 import 'package:npc_neural/util/better_neural_listener.dart';
 import 'package:npc_neural/util/spritesheet.dart';
 
+class SeeResult {
+  final double distance;
+  final bool isTarget;
+  final Vector2? intersectionPoint;
+
+  SeeResult(this.distance, this.isTarget, this.intersectionPoint);
+}
+
 class Knight extends SimpleAlly with BlockMovementCollision {
-  final Paint _rayPaint = Paint()
+  final Paint _rayCollisionPaint = Paint()
+    ..color = Colors.red.withOpacity(0.4)
+    ..strokeWidth = 1.2;
+
+  final Paint _rayTargetPaint = Paint()
     ..color = Colors.green.withOpacity(0.4)
-    ..strokeWidth = 1.5;
+    ..strokeWidth = 1.4;
 
   final bool training;
   SequentialWithVariation neuralnetWork;
   late ShapeHitbox hitbox;
-  List<RaycastResult<ShapeHitbox>> eyesResult = [];
+  List<SeeResult> eyesResult = [];
 
   IntervalTick? lifeTime;
   IntervalTick? checkStopTime;
@@ -24,13 +38,17 @@ class Knight extends SimpleAlly with BlockMovementCollision {
   int checkStopInterval = 500;
   bool winner = false;
   double score = 0;
+  double penalty = 0;
   int rank = 0;
   bool get isTheBest => !training ? true : rank == 1;
+
+  final int countEyeLines;
 
   Knight({
     required super.position,
     required this.neuralnetWork,
     this.training = true,
+    this.countEyeLines = 7,
   }) : super(
           size: Vector2.all(NpcNeuralGame.tilesize),
           animation: SimpleDirectionAnimation(
@@ -42,6 +60,8 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     _createTimers();
   }
 
+  double get maxDistanceVision => NpcNeuralGame.tilesize * 3;
+
   @override
   bool onComponentTypeCheck(PositionComponent other) {
     if (other is Knight) {
@@ -52,13 +72,12 @@ class Knight extends SimpleAlly with BlockMovementCollision {
 
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    if (other is Chest) {
+    if (other is FinishLine) {
       if (training) {
         var manager = BonfireInjector().get<GenerationManager>();
-        winner = manager.setWin(this);
-      } else {
-        winner = true;
+        manager.setWin(this);
       }
+      winner = true;
       stopMove();
     } else if (training) {
       die();
@@ -69,7 +88,6 @@ class Knight extends SimpleAlly with BlockMovementCollision {
 
   @override
   void update(double dt) {
-    super.update(dt);
     if (!isDead && !winner) {
       if (checkInterval('execNeural', 25, dt)) {
         _execNetwork(dt);
@@ -80,15 +98,16 @@ class Knight extends SimpleAlly with BlockMovementCollision {
         checkStopTime?.update(dt);
       }
     }
+    super.update(dt);
   }
 
   @override
   void render(Canvas canvas) {
     if (rank < 20 && !isDead) {
-      super.render(canvas);
       if (isTheBest) {
         _renderRayCast(canvas);
       }
+      super.render(canvas);
     }
   }
 
@@ -104,19 +123,16 @@ class Knight extends SimpleAlly with BlockMovementCollision {
   }
 
   void _execNetwork(double dt) {
-    var chest = getTarget();
-    if (chest == null) return;
+    var target = getTarget();
+    if (target == null) return;
 
-    List<ShapeHitbox> ignoreHitboxes = _getIgnoreHitboxes(chest);
+    List<ShapeHitbox> ignoreHitboxes = _getIgnoreHitboxes(target);
 
     _watchTheWorld(ignoreHitboxes);
 
-    if (eyesResult.length == 5) {
-      List<double> inputs = eyesResult.map((e) => e.distance ?? 0).toList();
-      inputs.add(angleTo(chest.absolutePosition));
-
+    if (eyesResult.length == countEyeLines) {
+      List<double> inputs = eyesResult.map((e) => e.distance).toList();
       final actionresult = neuralnetWork.process(inputs);
-
       _moveByResult(actionresult);
     }
 
@@ -127,12 +143,17 @@ class Knight extends SimpleAlly with BlockMovementCollision {
 
   void _renderRayCast(Canvas canvas) {
     for (var result in eyesResult) {
-      final intersectionPoint = result.intersectionPoint!.toOffset();
-      canvas.drawLine(
-        absoluteCenter.toOffset() - position.toOffset(),
-        intersectionPoint - position.toOffset(),
-        _rayPaint,
-      );
+      final intersectionPoint = result.intersectionPoint?.toOffset();
+      if (intersectionPoint != null) {
+        final intersection = intersectionPoint - position.toOffset();
+        final p = result.isTarget ? _rayTargetPaint : _rayCollisionPaint;
+        canvas.drawLine(
+          absoluteCenter.toOffset() - position.toOffset(),
+          intersection,
+          p,
+        );
+        canvas.drawCircle(intersection, 3, p);
+      }
     }
   }
 
@@ -146,15 +167,17 @@ class Knight extends SimpleAlly with BlockMovementCollision {
         direction: Vector2(1, 0)..rotate(angle),
       ),
       ignoreHitboxes: ignoreHitboxes,
+      maxDistance: maxDistanceVision,
     );
   }
 
-  void reset(Vector2 position, SequentialWithVariation? newNetwork) {
+  void reset(Vector2 position, SequentialWithVariation newNetwork) {
     this.position = position;
-    neuralnetWork = newNetwork ?? neuralnetWork;
+    neuralnetWork = newNetwork;
     winner = false;
     rank = 0;
     score = 0;
+    penalty = 0;
     _createTimers();
     revive();
     stopMove(forceIdle: true);
@@ -166,56 +189,46 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     super.die();
   }
 
-  Chest? chest;
+  FinishLine? _target;
 
-  Chest? getTarget() {
+  FinishLine? getTarget() {
     if (hasGameRef) {
-      if (chest == null) {
-        var query = gameRef.query<Chest>();
+      if (_target == null) {
+        var query = gameRef.query<FinishLine>();
         if (query.isNotEmpty) {
-          return chest = query.first;
+          return _target = query.first;
         }
       } else {
-        return chest;
+        return _target;
       }
     }
     return null;
   }
 
-  List<ShapeHitbox> _getIgnoreHitboxes(Chest chest) {
-    List<ShapeHitbox> ignoreHitboxes =
-        gameRef.query<Knight>().map((e) => e.hitbox).toList();
-    ignoreHitboxes.add(chest.hitbox);
+  List<ShapeHitbox> _getIgnoreHitboxes(FinishLine target) {
+    List<ShapeHitbox> ignoreHitboxes = gameRef.query<Knight>().map((e) {
+      return e.hitbox;
+    }).toList();
+    ignoreHitboxes.add(target.hitbox);
     return ignoreHitboxes;
   }
 
   void _watchTheWorld(List<ShapeHitbox> ignoreHitboxes) {
     eyesResult.clear();
 
-    var r1 = _createRay(0, ignoreHitboxes);
-    if (r1 != null) {
-      eyesResult.add(r1);
-    }
+    double startAngle = (-90 * pi / 180);
+    double angle = (180 * pi / 180) / (countEyeLines - 1);
 
-    var r2 = _createRay(0.349066, ignoreHitboxes);
-    if (r2 != null) {
-      eyesResult.add(r2);
-    }
-
-    var r3 = _createRay(0.698132, ignoreHitboxes);
-    if (r3 != null) {
-      eyesResult.add(r3);
-    }
-
-    var r5 = _createRay(-0.349066, ignoreHitboxes);
-    if (r5 != null) {
-      eyesResult.add(r5);
-    }
-
-    var r6 = _createRay(-0.698132, ignoreHitboxes);
-    if (r6 != null) {
-      eyesResult.add(r6);
-    }
+    List.generate(countEyeLines, (index) {
+      final r = _createRay(startAngle + (angle * index), ignoreHitboxes);
+      eyesResult.add(
+        SeeResult(
+          r?.distance ?? maxDistanceVision,
+          r?.hitbox?.parent is FinishLine,
+          r?.intersectionPoint,
+        ),
+      );
+    });
   }
 
   void _moveByResult(List<double> actionresult) {
@@ -255,10 +268,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
   }
 
   void _tickCheckStoped() {
-    if (lastDisplacement.x.abs() < 0.7 && lastDisplacement.y.abs() < 0.7) {
-      die();
-    }
-    if (chest != null && absoluteCenter.x > chest!.absoluteCenter.x) {
+    if (lastDisplacement.x.abs() < 0.5 && lastDisplacement.y.abs() < 0.5) {
       die();
     }
   }

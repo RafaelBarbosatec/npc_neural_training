@@ -9,6 +9,7 @@ class DenseLayerWithActivation extends LayerWithActivation implements Dense {
   DenseLayerWithActivation({
     required ActivationAlgorithm activation,
     required super.size,
+    List<NeuronWithActivation>? neuros,
   }) : super(activationAlgorithm: activation);
 }
 
@@ -21,8 +22,10 @@ class LayerWithActivation extends Layer {
   LayerWithActivation({
     required this.activationAlgorithm,
     required super.size,
+    List<NeuronWithActivation>? neuros,
   }) : super(activation: activationAlgorithm);
 
+  @override
   void initialise({
     required int parentLayerSize,
     required double learningRate,
@@ -63,7 +66,7 @@ class LayerWithActivation extends Layer {
       ..neurons.addAll(neurons ?? this.neurons);
   }
 
-  static LayerWithActivation fromMap(Map<String, dynamic> map) {
+  factory LayerWithActivation.fromMap(Map<String, dynamic> map) {
     final activationAlgorithm =
         ActivationAlgorithm.values[map[activationField] as int];
 

@@ -30,7 +30,7 @@ class NeuronWithActivation extends Neuron {
                   case 0:
                     return nextDouble(from: -limit, to: limit);
                   case 1:
-                    return e + random.nextDouble();
+                    return e + nextDouble(from: -1, to: 1);
                   case 2:
                     return e * random.nextDouble();
                   default:
