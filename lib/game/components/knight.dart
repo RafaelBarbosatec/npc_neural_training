@@ -232,7 +232,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
   }
 
   void _moveByResult(List<double> actionresult) {
-    velocity = Vector2.zero();
+    setZeroVelocity();
 
     bool goRight = actionresult[0] > 0;
     bool goLeft = actionresult[1] > 0;
