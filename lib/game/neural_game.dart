@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:bonfire/base/bonfire_game_interface.dart';
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
@@ -35,10 +33,5 @@ class NeuralGame extends StatelessWidget {
         );
       },
     );
-  }
-
-  double getZoomGame(Size screenSize, double tileSize, int maxTile) {
-    final maxSize = max(screenSize.width, screenSize.height);
-    return maxSize / (tileSize * maxTile);
   }
 }
