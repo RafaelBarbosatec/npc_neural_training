@@ -5,7 +5,6 @@ import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
 import 'package:npc_neural/game/components/finish_line.dart';
 import 'package:npc_neural/game/components/spikes.dart';
-import 'package:npc_neural/game/npc_neural_game.dart';
 
 class NeuralGame extends StatelessWidget {
   final ValueChanged<BonfireGameInterface> onReady;
@@ -31,11 +30,7 @@ class NeuralGame extends StatelessWidget {
           onReady: onReady,
           cameraConfig: CameraConfig(
             moveOnlyMapArea: true,
-            zoom: getZoomGame(
-              constraints.biggest,
-              NpcNeuralGame.tilesize,
-              25,
-            ),
+            initialMapZoomFit: InitialMapZoomFitEnum.fitWidth,
           ),
         );
       },

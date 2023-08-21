@@ -21,10 +21,10 @@ packages:
     dependency: "direct main"
     description:
       name: bonfire
-      sha256: "360db4a5da04c65c0241aa014de82972e2bb1d6f7f596c7af58e5804b0584317"
+      sha256: "02cfac933a406b5c8b16d3f3b14086a6739a228904d486e20676c96f39e8cb85"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0-beta.3"
+    version: "3.0.0-beta.8"
   boolean_selector:
     dependency: transitive
     description:
@@ -109,10 +109,10 @@ packages:
     dependency: transitive
     description:
       name: flame
-      sha256: "12db9de3cd31b86465b0c1ea173020fb71b15df424ca01b665fa5300b24864c8"
+      sha256: bd2b45f9fc0ec4939031b85c0b0a97cf09357c12ecd072d44389a4c577a2c0f0
       url: "https://pub.dev"
     source: hosted
-    version: "1.8.1"
+    version: "1.8.2"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -393,10 +393,10 @@ packages:
     dependency: transitive
     description:
       name: tiledjsonreader
-      sha256: b9ce57567eed3b8efbe1ef2ec5ff8ba6f5aedb3a27f33d577e49de1aa5a95e13
+      sha256: be0c4659cddccd1076a0b89b9933a6ef559806dbf396ab3395c5de012e1f96c9
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.6"
+    version: "1.2.7"
   tint:
     dependency: transitive
     description:
