@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  bonfire: ^3.0.0-beta.9
+  bonfire: ^3.0.0-beta.11
   neurons_tree_widget: ^0.0.1
   d_chart: ^2.3.0
   shared_preferences: ^2.2.0

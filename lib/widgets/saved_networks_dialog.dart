@@ -123,7 +123,7 @@ class _SavedNetworksDialogState extends State<SavedNetworksDialog> {
                                           widget.networkSlected(network, true);
                                         }
                                       },
-                                      child: const Text('Train'),
+                                      child: const Text('Retrain'),
                                     ),
                                   )
                                 ],

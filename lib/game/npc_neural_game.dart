@@ -11,7 +11,30 @@ class NpcNeuralGame extends StatefulWidget {
   static const tilesize = 16.0;
   final SequentialWithVariation? neural;
   final bool train;
-  const NpcNeuralGame({super.key, this.neural, this.train = true});
+  final int individualsCount;
+  const NpcNeuralGame({
+    super.key,
+    this.neural,
+    this.train = true,
+    this.individualsCount = 80,
+  });
+
+  static open(
+    BuildContext context, {
+    SequentialWithVariation? sequential,
+    bool train = true,
+    int individualsCount = 80,
+  }) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => NpcNeuralGame(
+          neural: sequential,
+          train: train,
+          individualsCount:individualsCount,
+        ),
+      ),
+    );
+  }
 
   @override
   State<NpcNeuralGame> createState() => _NpcNeuralGameState();
@@ -25,6 +48,7 @@ class _NpcNeuralGameState extends State<NpcNeuralGame> {
     _generationManager = GenerationManager(
       storage: BonfireInjector().get(),
       baseNeural: widget.neural,
+      individualsCount: widget.individualsCount,
     );
     BonfireInjector.instance.putSingleton(
       (i) => _generationManager,

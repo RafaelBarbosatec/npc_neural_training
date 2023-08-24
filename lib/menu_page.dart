@@ -5,9 +5,16 @@ import 'package:npc_neural/game/npc_neural_game.dart';
 import 'package:npc_neural/neural_network_utils/models.dart';
 import 'package:npc_neural/widgets/saved_networks_dialog.dart';
 
-class MenuPage extends StatelessWidget {
+class MenuPage extends StatefulWidget {
   const MenuPage({super.key});
 
+  @override
+  State<MenuPage> createState() => _MenuPageState();
+}
+
+class _MenuPageState extends State<MenuPage> {
+  int countGeneration = 50;
+  int _maxCountGeneration = 100;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,34 +25,76 @@ class MenuPage extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              width: 200,
-              child: ElevatedButton(
-                onPressed: () => _goToGame(context),
-                child: const Text('Train my network'),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border.all(),
+                borderRadius: BorderRadius.circular(16),
               ),
-            ),
-            const SizedBox(
-              height: 16,
-            ),
-            SizedBox(
-              width: 200,
-              child: ElevatedButton(
-                onPressed: () async {
-                  SavedNetworksDialog.show(
-                    context,
-                    (network, train) {
-                      Future.delayed(const Duration(milliseconds: 300), () {
-                        _goToGame(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Train yourself',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 32,
+                  ),
+                  Text('Count individuals of generation: $countGeneration'),
+                  SizedBox(
+                    width: 300,
+                    child: Slider(
+                      value: countGeneration / _maxCountGeneration,
+                      onChanged: (value) {
+                        var c = (_maxCountGeneration * value).toInt();
+                        if (c % 2 == 0) {
+                          setState(() {
+                            countGeneration = c;
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 16,
+                  ),
+                  SizedBox(
+                    width: 200,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _goToGame(context, individualsCount: countGeneration);
+                      },
+                      child: const Text('Train my network'),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 16,
+                  ),
+                  SizedBox(
+                    width: 200,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        SavedNetworksDialog.show(
                           context,
-                          sequential: network,
-                          train: train,
+                          (network, train) {
+                            Future.delayed(const Duration(milliseconds: 300),
+                                () {
+                              _goToGame(
+                                context,
+                                sequential: network,
+                                train: train,
+                              );
+                            });
+                          },
                         );
-                      });
-                    },
-                  );
-                },
-                child: const Text('Load my network'),
+                      },
+                      child: const Text('Load my network'),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(
@@ -60,7 +109,12 @@ class MenuPage extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Network trained'),
+                  const Text(
+                    'Network trained',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(
                     height: 16,
                   ),
@@ -93,7 +147,7 @@ class MenuPage extends StatelessWidget {
                               true,
                             );
                           },
-                          child: const Text('Train model'),
+                          child: const Text('Retrain model'),
                         ),
                       ),
                     ],
@@ -111,14 +165,13 @@ class MenuPage extends StatelessWidget {
     BuildContext context, {
     SequentialWithVariation? sequential,
     bool train = true,
+    int individualsCount = 40,
   }) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => NpcNeuralGame(
-          neural: sequential,
-          train: train,
-        ),
-      ),
+    NpcNeuralGame.open(
+      context,
+      sequential: sequential,
+      train: train,
+      individualsCount: individualsCount,
     );
   }
 
