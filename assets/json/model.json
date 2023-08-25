@@ -1,0 +1,17 @@
+{
+    "learningRate": 0.01,
+    "layers": [
+        {
+            "activation": 1,
+            "size": 7
+        },
+        {
+            "activation": 1,
+            "size": 5
+        },
+        {
+            "activation": 1,
+            "size": 4
+        }
+    ]
+}

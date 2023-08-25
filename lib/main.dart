@@ -9,7 +9,7 @@ void main() {
     (i) => BetterNeuralListener(),
   );
   BonfireInjector.instance.putSingleton(
-    (i) => NeuralStorage(),
+    (i) => NeuralWeightsStorage(),
   );
   runApp(const MainApp());
 }

@@ -1,19 +1,18 @@
 import 'dart:convert';
 
-import 'package:npc_neural/neural_network_utils/models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class NeuralStorage {
-  Future save(String key, SequentialWithVariation neural) async {
+class NeuralWeightsStorage {
+  Future save(String key, List<List<List<double>>> weights) async {
     final prefs = await _instance();
-    prefs.setString(key, jsonEncode(neural.toMap()));
+    prefs.setString(key, jsonEncode(weights));
   }
 
-  Future<SequentialWithVariation?> get(String key) async {
+  Future<dynamic> get(String key) async {
     final prefs = await _instance();
     final json = prefs.getString(key);
     if (json != null) {
-      return SequentialWithVariation.fromMap(jsonDecode(json));
+      return jsonDecode(json);
     }
     return null;
   }

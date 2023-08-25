@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:npc_neural/game/npc_neural_game.dart';
 import 'package:npc_neural/neural_network_utils/models.dart';
+import 'package:npc_neural/neural_network_utils/npc_neural_model.dart';
 import 'package:npc_neural/widgets/saved_networks_dialog.dart';
 
 class MenuPage extends StatefulWidget {
@@ -127,7 +128,7 @@ class _MenuPageState extends State<MenuPage> {
                           onPressed: () {
                             _loadModel(
                               context,
-                              'assets/json/network1.json',
+                              'assets/json/weights.json',
                               false,
                             );
                           },
@@ -143,7 +144,7 @@ class _MenuPageState extends State<MenuPage> {
                           onPressed: () {
                             _loadModel(
                               context,
-                              'assets/json/network1.json',
+                              'assets/json/weights.json',
                               true,
                               individualsCount: countGeneration,
                             );
@@ -168,20 +169,28 @@ class _MenuPageState extends State<MenuPage> {
     bool train = true,
     int individualsCount = 40,
     double mutationPercent = 1.0,
-  }) {
+  }) async {
     NpcNeuralGame.open(
-      context,
-      sequential: sequential,
+      context: context,
+      projenitorNeural: sequential,
+      neuralModel: await NpcNeuralModel.loadModel(context),
       train: train,
       individualsCount: individualsCount,
       mutationPercent: mutationPercent,
     );
   }
 
-  void _loadModel(BuildContext context, String path, bool train,
-      {int individualsCount = 40}) async {
-    String data = await DefaultAssetBundle.of(context).loadString(path);
-    final neuralNetwork = SequentialWithVariation.fromMap(jsonDecode(data));
+  void _loadModel(
+    BuildContext context,
+    String path,
+    bool train, {
+    int individualsCount = 40,
+  }) async {
+    String weightsJson = await DefaultAssetBundle.of(context).loadString(path);
+    final neuralNetwork = await NpcNeuralModel.loadNeuralNetwork(
+      context,
+      jsonDecode(weightsJson),
+    );
     if (context.mounted) {
       _goToGame(
         context,

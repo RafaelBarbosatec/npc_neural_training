@@ -15,8 +15,7 @@ class DenseLayerWithActivation extends LayerWithActivation implements Dense {
 
 class LayerWithActivation extends Layer {
   static const activationField = 'activation';
-  static const neuronsField = 'neurons';
-  static const isInputField = 'isInput';
+  static const sizeField = 'size';
 
   final ActivationAlgorithm activationAlgorithm;
   LayerWithActivation({
@@ -67,30 +66,18 @@ class LayerWithActivation extends Layer {
   }
 
   factory LayerWithActivation.fromMap(Map<String, dynamic> map) {
-    final activationAlgorithm =
-        ActivationAlgorithm.values[map[activationField] as int];
-
-    final neurons = (map[neuronsField] as List)
-        .map((e) => NeuronWithActivation.fromMap((e as Map).cast()))
-        .toList();
-    final isInput = map[isInputField];
-
+    int size = map[sizeField] as int;
+    var algorithm = ActivationAlgorithm.values[map[activationField] as int];
     return LayerWithActivation(
-      size: neurons.length,
-      activationAlgorithm: activationAlgorithm,
-    )
-      ..isInput = isInput
-      ..neurons.addAll(neurons);
+      size: size,
+      activationAlgorithm: algorithm,
+    );
   }
 
   Map<String, dynamic> toMap() {
     return {
       activationField: activation.index,
-      isInputField: isInput,
-      neuronsField: neurons
-          .cast<NeuronWithActivation>()
-          .map((neuron) => neuron.toMap())
-          .toList(),
+      sizeField: size,
     };
   }
 }

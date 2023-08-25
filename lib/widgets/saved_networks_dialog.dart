@@ -4,6 +4,7 @@ import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:npc_neural/neural_network_utils/models.dart';
+import 'package:npc_neural/neural_network_utils/npc_neural_model.dart';
 import 'package:npc_neural/util/strage.dart';
 
 class SavedNetworksDialog extends StatefulWidget {
@@ -31,7 +32,7 @@ class SavedNetworksDialog extends StatefulWidget {
 }
 
 class _SavedNetworksDialogState extends State<SavedNetworksDialog> {
-  late NeuralStorage storage;
+  late NeuralWeightsStorage storage;
   @override
   void initState() {
     storage = BonfireInjector().get();
@@ -96,33 +97,14 @@ class _SavedNetworksDialogState extends State<SavedNetworksDialog> {
                                 children: [
                                   Expanded(
                                     child: ElevatedButton(
-                                      onPressed: () async {
-                                        final network = await storage.get(key);
-                                        if (context.mounted) {
-                                          Navigator.pop(context);
-                                        }
-                                        if (network != null) {
-                                          widget.networkSlected(
-                                            network,
-                                            false,
-                                          );
-                                        }
-                                      },
+                                      onPressed: () => _tap(key, false),
                                       child: const Text('Use'),
                                     ),
                                   ),
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: ElevatedButton(
-                                      onPressed: () async {
-                                        final network = await storage.get(key);
-                                        if (context.mounted) {
-                                          Navigator.pop(context);
-                                        }
-                                        if (network != null) {
-                                          widget.networkSlected(network, true);
-                                        }
-                                      },
+                                      onPressed: () => _tap(key, true),
                                       child: const Text('Retrain'),
                                     ),
                                   )
@@ -158,14 +140,14 @@ class _SavedNetworksDialogState extends State<SavedNetworksDialog> {
     );
   }
 
-  void _copy(String key, NeuralStorage storage) async {
+  void _copy(String key, NeuralWeightsStorage storage) async {
     final network = await storage.get(key);
     if (network != null) {
-      Clipboard.setData(ClipboardData(text: jsonEncode(network.toMap())));
+      Clipboard.setData(ClipboardData(text: jsonEncode(network)));
     }
   }
 
-  void _delete(String key, NeuralStorage storage) async {
+  void _delete(String key, NeuralWeightsStorage storage) async {
     await storage.delete(key);
     setState(() {});
   }
@@ -173,5 +155,21 @@ class _SavedNetworksDialogState extends State<SavedNetworksDialog> {
   void _deleteAll() async {
     await storage.clear();
     setState(() {});
+  }
+
+  void _tap(String key, bool isTrain) async {
+    final weights = await storage.get(key);
+    if (context.mounted) {
+      Navigator.pop(context);
+    }
+    if (weights != null) {
+      widget.networkSlected(
+        await NpcNeuralModel.loadNeuralNetwork(
+          context,
+          weights,
+        ),
+        isTrain,
+      );
+    }
   }
 }

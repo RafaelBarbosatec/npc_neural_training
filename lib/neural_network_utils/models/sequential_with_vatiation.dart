@@ -24,16 +24,23 @@ class SequentialWithVariation extends Sequential {
   }
 
   /// Loads a model from a JSON .
-  SequentialWithVariation.fromMap(Map<String, dynamic> data)
+  SequentialWithVariation.loadModel(Map<String, dynamic> data)
       : super(learningRate: 0) {
     learningRate = data[learningRateField];
+    LayerWithActivation? last;
     for (Map<String, dynamic> layer in data[layersField]) {
-      layers.add(LayerWithActivation.fromMap(layer));
+      layers.add(
+        last = LayerWithActivation.fromMap(layer)
+          ..initialise(
+            parentLayerSize: last?.size ?? 0,
+            learningRate: learningRate,
+          ),
+      );
     }
   }
 
-  /// Save the model to a JSON.
-  Map<String, dynamic> toMap() {
+  /// get model in JSON format.
+  Map<String, dynamic> getModel() {
     return {
       learningRateField: learningRate,
       layersField: layers //
@@ -41,5 +48,27 @@ class SequentialWithVariation extends Sequential {
           .map((e) => e.toMap())
           .toList(),
     };
+  }
+
+  /// get Weight.
+  List<List<List<double>>> getWeights() {
+    return layers.map((e) {
+      return e.neurons.map((e) => e.weights).toList();
+    }).toList();
+  }
+
+  void loadWeights(dynamic weights) {
+    final weightsList = (weights as List).map((e) {
+      return (e as List).map((e) {
+        return (e as List).map((e) {
+          return double.parse(e.toString());
+        }).toList();
+      }).toList();
+    }).toList();
+    for (int l = 0; l < layers.length; l++) {
+      for (int n = 0; n < layers[l].neurons.length; n++) {
+        layers[l].neurons[n].weights = weightsList[l][n];
+      }
+    }
   }
 }

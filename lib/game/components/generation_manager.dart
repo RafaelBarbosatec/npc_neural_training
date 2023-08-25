@@ -7,7 +7,6 @@ import 'package:npc_neural/game/components/knight.dart';
 import 'package:npc_neural/game/npc_neural_game.dart';
 import 'package:npc_neural/neural_network_utils/models.dart';
 import 'package:npc_neural/util/strage.dart';
-import 'package:synadart/synadart.dart';
 
 class GenerationManager extends GameComponent with ChangeNotifier {
   static const _checkLivesInvervalKey = 'checkLivesInterval';
@@ -40,7 +39,8 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   final int countWinToFinish;
   final int countProgenitor;
   final SequentialWithVariation? baseNeural;
-  final NeuralStorage storage;
+  final NeuralWeightsStorage storage;
+  final Map<String, dynamic> neuralModel;
   late DateTime _timeCreate;
 
   GenerationManager({
@@ -50,6 +50,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
     this.countProgenitor = 2,
     this.baseNeural,
     this.countKnightEyeLines = 7,
+    required this.neuralModel,
     required this.storage,
   }) : assert(individualsCount % countProgenitor == 0) {
     _timeCreate = DateTime.now();
@@ -119,28 +120,12 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   }
 
   SequentialWithVariation _createNetwork(
-    SequentialWithVariation? mainNeuralNetwork,
+    SequentialWithVariation? baseNeuralNetwork,
   ) {
-    if (mainNeuralNetwork != null) {
-      return mainNeuralNetwork.variation();
+    if (baseNeuralNetwork != null) {
+      return baseNeuralNetwork.variation();
     }
-    return SequentialWithVariation(
-      learningRate: 0.01,
-      layers: [
-        DenseLayerWithActivation(
-          size: countKnightEyeLines,
-          activation: ActivationAlgorithm.relu,
-        ),
-        DenseLayerWithActivation(
-          size: (countKnightEyeLines + outputNeuros) ~/ 2,
-          activation: ActivationAlgorithm.relu,
-        ),
-        DenseLayerWithActivation(
-          size: outputNeuros,
-          activation: ActivationAlgorithm.relu,
-        ),
-      ],
-    );
+    return SequentialWithVariation.loadModel(neuralModel);
   }
 
   void _sratNewGeneration() {
@@ -254,8 +239,8 @@ class GenerationManager extends GameComponent with ChangeNotifier {
 
   void _saveNeural(SequentialWithVariation neuralnetWork) {
     storage.save(
-      'network-train-${_timeCreate.toIso8601String()}',
-      neuralnetWork,
+      'neural-weights-${_timeCreate.toIso8601String()}',
+      neuralnetWork.getWeights(),
     );
   }
 }

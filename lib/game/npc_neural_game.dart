@@ -9,21 +9,24 @@ import 'package:npc_neural/widgets/train_panel_widget.dart';
 
 class NpcNeuralGame extends StatefulWidget {
   static const tilesize = 16.0;
-  final SequentialWithVariation? neural;
+  final SequentialWithVariation? projenitorNeural;
   final bool train;
   final int individualsCount;
   final double mutationPercent;
+  final Map<String, dynamic> neuralModel;
   const NpcNeuralGame({
     super.key,
-    this.neural,
+    this.projenitorNeural,
     this.train = true,
     this.individualsCount = 80,
     this.mutationPercent = 1.0,
+    required this.neuralModel,
   });
 
-  static open(
-    BuildContext context, {
-    SequentialWithVariation? sequential,
+  static open({
+    required BuildContext context,
+    required Map<String, dynamic> neuralModel,
+    SequentialWithVariation? projenitorNeural,
     bool train = true,
     int individualsCount = 80,
     double mutationPercent = 1.0,
@@ -31,11 +34,11 @@ class NpcNeuralGame extends StatefulWidget {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => NpcNeuralGame(
-          neural: sequential,
-          train: train,
-          individualsCount: individualsCount,
-          mutationPercent: mutationPercent,
-        ),
+            projenitorNeural: projenitorNeural,
+            train: train,
+            individualsCount: individualsCount,
+            mutationPercent: mutationPercent,
+            neuralModel: neuralModel),
       ),
     );
   }
@@ -51,7 +54,8 @@ class _NpcNeuralGameState extends State<NpcNeuralGame> {
   void initState() {
     _generationManager = GenerationManager(
       storage: BonfireInjector().get(),
-      baseNeural: widget.neural,
+      baseNeural: widget.projenitorNeural,
+      neuralModel: widget.neuralModel,
       individualsCount: widget.individualsCount,
     );
     BonfireInjector.instance.putSingleton(
@@ -110,7 +114,7 @@ class _NpcNeuralGameState extends State<NpcNeuralGame> {
           ? _generationManager
           : Knight(
               position: GenerationManager.initPosition,
-              neuralnetWork: widget.neural!,
+              neuralnetWork: widget.projenitorNeural!,
               training: false,
             ),
     );
