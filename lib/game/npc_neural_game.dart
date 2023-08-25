@@ -12,11 +12,13 @@ class NpcNeuralGame extends StatefulWidget {
   final SequentialWithVariation? neural;
   final bool train;
   final int individualsCount;
+  final double mutationPercent;
   const NpcNeuralGame({
     super.key,
     this.neural,
     this.train = true,
     this.individualsCount = 80,
+    this.mutationPercent = 1.0,
   });
 
   static open(
@@ -24,13 +26,15 @@ class NpcNeuralGame extends StatefulWidget {
     SequentialWithVariation? sequential,
     bool train = true,
     int individualsCount = 80,
+    double mutationPercent = 1.0,
   }) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => NpcNeuralGame(
           neural: sequential,
           train: train,
-          individualsCount:individualsCount,
+          individualsCount: individualsCount,
+          mutationPercent: mutationPercent,
         ),
       ),
     );
@@ -58,24 +62,44 @@ class _NpcNeuralGameState extends State<NpcNeuralGame> {
 
   @override
   Widget build(BuildContext context) {
+    Widget gameWidget = NeuralGame(
+      onReady: (value) {
+        game = value;
+      },
+    );
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: Row(
-          children: [
-            TrainPanelWidget(
-              withGraph: widget.train,
-              onTapStart: _onStart,
-            ),
-            Expanded(
-              child: NeuralGame(
-                onReady: (value) {
-                  game = value;
-                },
-              ),
-            ),
-          ],
-        ),
+        child: OrientationBuilder(builder: (context, orientation) {
+          switch (orientation) {
+            case Orientation.landscape:
+              return Row(
+                children: [
+                  TrainPanelWidget(
+                    withGraph: widget.train,
+                    onTapStart: _onStart,
+                    orientation: orientation,
+                  ),
+                  Expanded(
+                    child: gameWidget,
+                  ),
+                ],
+              );
+            case Orientation.portrait:
+              return Column(
+                children: [
+                  TrainPanelWidget(
+                    withGraph: widget.train,
+                    onTapStart: _onStart,
+                    orientation: orientation,
+                  ),
+                  Expanded(
+                    child: gameWidget,
+                  ),
+                ],
+              );
+          }
+        }),
       ),
     );
   }

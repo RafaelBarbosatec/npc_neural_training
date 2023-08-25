@@ -19,20 +19,24 @@ class NeuronWithActivation extends Neuron {
     super.weights,
   }) : super(activationAlgorithm: activationAlgorithm);
 
-  NeuronWithActivation variation({Mutation? mutation}) {
+  NeuronWithActivation variation({Mutation? mutation, double percent = 1.0}) {
     var random = Random();
-    final limit = 1 / sqrt(weights.length);
     return copyWith(
       weights: weights
           .map(mutation ??
               (e) {
                 switch (random.nextInt(4)) {
                   case 0:
-                    return nextDouble(from: -limit, to: limit);
+                    if (percent == 1.0) {
+                      final limit = 1 / sqrt(weights.length);
+                      return nextDouble(from: -limit, to: limit);
+                    } else {
+                      return e;
+                    }
                   case 1:
-                    return e + nextDouble(from: -1, to: 1);
+                    return e + (nextDouble(from: -1, to: 1) * percent);
                   case 2:
-                    return e * random.nextDouble();
+                    return e * (random.nextDouble() * percent);
                   default:
                     return e;
                 }
@@ -57,7 +61,9 @@ class NeuronWithActivation extends Neuron {
   /// Create a [Neuron] from this Map
   static NeuronWithActivation fromMap(Map<String, dynamic> map) {
     final activationIndex = map[activationField] as int;
-    final weights = List<double>.from(map[weightsField] as List);
+    final weights = (map[weightsField] as List).map((e) {
+      return double.parse(e.toString());
+    }).toList();
     return NeuronWithActivation(
       activationAlgorithm: ActivationAlgorithm.values[activationIndex],
       learningRate: map[learningRateField] as double,

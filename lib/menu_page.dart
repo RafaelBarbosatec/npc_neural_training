@@ -145,6 +145,7 @@ class _MenuPageState extends State<MenuPage> {
                               context,
                               'assets/json/network1.json',
                               true,
+                              individualsCount: countGeneration,
                             );
                           },
                           child: const Text('Retrain model'),
@@ -166,20 +167,29 @@ class _MenuPageState extends State<MenuPage> {
     SequentialWithVariation? sequential,
     bool train = true,
     int individualsCount = 40,
+    double mutationPercent = 1.0,
   }) {
     NpcNeuralGame.open(
       context,
       sequential: sequential,
       train: train,
       individualsCount: individualsCount,
+      mutationPercent: mutationPercent,
     );
   }
 
-  void _loadModel(BuildContext context, String path, bool train) async {
+  void _loadModel(BuildContext context, String path, bool train,
+      {int individualsCount = 40}) async {
     String data = await DefaultAssetBundle.of(context).loadString(path);
     final neuralNetwork = SequentialWithVariation.fromMap(jsonDecode(data));
     if (context.mounted) {
-      _goToGame(context, sequential: neuralNetwork, train: train);
+      _goToGame(
+        context,
+        sequential: neuralNetwork,
+        train: train,
+        mutationPercent: 0.5,
+        individualsCount: individualsCount,
+      );
     }
   }
 }

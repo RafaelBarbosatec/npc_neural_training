@@ -12,14 +12,15 @@ class SequentialWithVariation extends Sequential {
     List<LayerWithActivation>? super.layers,
   });
 
-  SequentialWithVariation variation({Mutation? mutation}) {
+  SequentialWithVariation variation(
+      {Mutation? mutation, double percent = 1.0}) {
     return SequentialWithVariation(
       learningRate: learningRate,
     )..layers.addAll(layers //
         .cast<LayerWithActivation>()
         .map((layer) => layer.isInput
             ? layer.copyWith()
-            : layer.variation(mutation: mutation)));
+            : layer.variation(mutation: mutation, percent: percent)));
   }
 
   /// Loads a model from a JSON .

@@ -44,11 +44,11 @@ class LayerWithActivation extends Layer {
     );
   }
 
-  Layer variation({Mutation? mutation}) {
+  Layer variation({Mutation? mutation, double percent = 1.0}) {
     return copyWith(
       neurons: neurons
           .cast<NeuronWithActivation>()
-          .map((e) => e.variation(mutation: mutation))
+          .map((e) => e.variation(mutation: mutation, percent: percent))
           .toList(),
     );
   }
