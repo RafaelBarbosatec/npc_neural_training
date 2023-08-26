@@ -57,8 +57,8 @@ class SequentialWithVariation extends Sequential {
     }).toList();
   }
 
-  void loadWeights(dynamic weights) {
-    final weightsList = (weights as List).map((e) {
+  void loadWeights(List weights) {
+    final weightsList = weights.map((e) {
       return (e as List).map((e) {
         return (e as List).map((e) {
           return double.parse(e.toString());

@@ -5,7 +5,7 @@ import 'package:synadart/synadart.dart';
 class NpcNeuralModel {
   static Future<SequentialWithVariation> loadNeuralNetwork(
     BuildContext context,
-    dynamic weights,
+    List weights,
   ) async {
     return createModel()..loadWeights(weights);
   }
