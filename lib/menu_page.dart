@@ -173,7 +173,6 @@ class _MenuPageState extends State<MenuPage> {
     NpcNeuralGame.open(
       context: context,
       projenitorNeural: sequential,
-      neuralModel: await NpcNeuralModel.loadModel(context),
       train: train,
       individualsCount: individualsCount,
       mutationPercent: mutationPercent,

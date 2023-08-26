@@ -6,6 +6,7 @@ import 'package:npc_neural/game/components/finish_line.dart';
 import 'package:npc_neural/game/components/knight.dart';
 import 'package:npc_neural/game/npc_neural_game.dart';
 import 'package:npc_neural/neural_network_utils/models.dart';
+import 'package:npc_neural/neural_network_utils/npc_neural_model.dart';
 import 'package:npc_neural/util/strage.dart';
 
 class GenerationManager extends GameComponent with ChangeNotifier {
@@ -40,7 +41,6 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   final int countProgenitor;
   final SequentialWithVariation? baseNeural;
   final NeuralWeightsStorage storage;
-  final Map<String, dynamic> neuralModel;
   late DateTime _timeCreate;
 
   GenerationManager({
@@ -50,7 +50,6 @@ class GenerationManager extends GameComponent with ChangeNotifier {
     this.countProgenitor = 2,
     this.baseNeural,
     this.countKnightEyeLines = 7,
-    required this.neuralModel,
     required this.storage,
   }) : assert(individualsCount % countProgenitor == 0) {
     _timeCreate = DateTime.now();
@@ -125,7 +124,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
     if (baseNeuralNetwork != null) {
       return baseNeuralNetwork.variation();
     }
-    return SequentialWithVariation.loadModel(neuralModel);
+    return NpcNeuralModel.createModel();
   }
 
   void _sratNewGeneration() {

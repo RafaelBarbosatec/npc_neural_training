@@ -13,19 +13,16 @@ class NpcNeuralGame extends StatefulWidget {
   final bool train;
   final int individualsCount;
   final double mutationPercent;
-  final Map<String, dynamic> neuralModel;
   const NpcNeuralGame({
     super.key,
     this.projenitorNeural,
     this.train = true,
     this.individualsCount = 80,
     this.mutationPercent = 1.0,
-    required this.neuralModel,
   });
 
   static open({
     required BuildContext context,
-    required Map<String, dynamic> neuralModel,
     SequentialWithVariation? projenitorNeural,
     bool train = true,
     int individualsCount = 80,
@@ -34,11 +31,11 @@ class NpcNeuralGame extends StatefulWidget {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => NpcNeuralGame(
-            projenitorNeural: projenitorNeural,
-            train: train,
-            individualsCount: individualsCount,
-            mutationPercent: mutationPercent,
-            neuralModel: neuralModel),
+          projenitorNeural: projenitorNeural,
+          train: train,
+          individualsCount: individualsCount,
+          mutationPercent: mutationPercent,
+        ),
       ),
     );
   }
@@ -55,7 +52,6 @@ class _NpcNeuralGameState extends State<NpcNeuralGame> {
     _generationManager = GenerationManager(
       storage: BonfireInjector().get(),
       baseNeural: widget.projenitorNeural,
-      neuralModel: widget.neuralModel,
       individualsCount: widget.individualsCount,
     );
     BonfireInjector.instance.putSingleton(
