@@ -157,15 +157,12 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     }
   }
 
-  RaycastResult<ShapeHitbox>? _createRay(
+  RaycastResult<ShapeHitbox>? _throwRay(
     double angle,
     List<ShapeHitbox> ignoreHitboxes,
   ) {
-    return gameRef.raycast(
-      Ray2(
-        origin: absoluteCenter,
-        direction: Vector2(1, 0)..rotate(angle),
-      ),
+    return raycast(
+      Vector2(1, 0)..rotate(angle),
       ignoreHitboxes: ignoreHitboxes,
       maxDistance: maxDistanceVision,
     );
@@ -220,7 +217,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     double angle = (180 * pi / 180) / (countEyeLines - 1);
 
     List.generate(countEyeLines, (index) {
-      final r = _createRay(startAngle + (angle * index), ignoreHitboxes);
+      final r = _throwRay(startAngle + (angle * index), ignoreHitboxes);
       eyesResult.add(
         SeeResult(
           r?.distance ?? maxDistanceVision,
@@ -263,8 +260,8 @@ class Knight extends SimpleAlly with BlockMovementCollision {
   }
 
   void _createTimers() {
-    lifeTime = IntervalTick(timeLifeInterval, tick: die);
-    checkStopTime = IntervalTick(checkStopInterval, tick: _tickCheckStoped);
+    lifeTime = IntervalTick(timeLifeInterval, onTick: die);
+    checkStopTime = IntervalTick(checkStopInterval, onTick: _tickCheckStoped);
   }
 
   void _tickCheckStoped() {
