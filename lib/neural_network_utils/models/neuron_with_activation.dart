@@ -53,4 +53,23 @@ class NeuronWithActivation extends Neuron {
       parentLayerSize: (weights ?? this.weights).length,
     );
   }
+
+  NeuronWithActivation recombination(Neuron neuron) {
+    return copyWith(weights: _doRecombination(weights, neuron.weights));
+  }
+
+  List<double> _doRecombination(List<double> weights, List<double> weights2) {
+    List<double> newWeights = [];
+    Random _r = Random();
+    List<bool> baseRecombination =
+        List.generate(weights.length, (index) => _r.nextBool(),);
+    for (int i = 0; i < baseRecombination.length; i++) {
+      if (baseRecombination[i]) {
+        newWeights.add(weights[i]);
+      } else {
+        newWeights.add(weights2[i]);
+      }
+    }
+    return newWeights;
+  }
 }

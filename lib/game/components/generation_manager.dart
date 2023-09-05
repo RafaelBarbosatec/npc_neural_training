@@ -38,7 +38,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   int countWin = 0;
   final Map<int, SequentialWithVariation> _wins = {};
   final int countWinToFinish;
-  final int countProgenitor;
+  static final int countProgenitor = 2;
   final SequentialWithVariation? baseNeural;
   final NeuralWeightsStorage storage;
   late DateTime _timeCreate;
@@ -47,7 +47,6 @@ class GenerationManager extends GameComponent with ChangeNotifier {
     this.individualsCount = 80,
     this.timeScale = 1.5,
     this.countWinToFinish = 4,
-    this.countProgenitor = 2,
     this.baseNeural,
     this.countKnightEyeLines = 7,
     required this.storage,
@@ -86,21 +85,28 @@ class GenerationManager extends GameComponent with ChangeNotifier {
 
   void _createGeration() {
     if (_individuals.isNotEmpty) {
-      int countMutations = individualsCount ~/ _progenitors.length - 1;
+      int countMutations = individualsCount ~/ _progenitors.length - 2;
       int indexIndividuo = 0;
       for (var pro in _progenitors) {
+      
+        // keep this projenitor
         _individuals[indexIndividuo].reset(initPosition, pro);
         indexIndividuo++;
-        List.generate(
-          countMutations,
-          (index) {
-            _individuals[indexIndividuo].reset(
-              initPosition,
-              _createNetwork(pro),
-            );
-            indexIndividuo++;
-          },
+
+         // make recombination with projenitors
+        _individuals[indexIndividuo].reset(
+          initPosition,
+          _recombinationNetwork(_progenitors[0], _progenitors[1]),
         );
+        indexIndividuo++;
+
+        List.generate(countMutations, (index) {
+          _individuals[indexIndividuo].reset(
+            initPosition,
+            _createNetwork(pro),
+          );
+          indexIndividuo++;
+        });
       }
     } else {
       List.generate(individualsCount, (index) {
@@ -119,12 +125,16 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   }
 
   SequentialWithVariation _createNetwork(
-    SequentialWithVariation? baseNeuralNetwork,
+    SequentialWithVariation? net,
   ) {
-    if (baseNeuralNetwork != null) {
-      return baseNeuralNetwork.variation();
-    }
-    return NpcNeuralModel.createModel();
+    return net?.variation() ?? NpcNeuralModel.createModel();
+  }
+
+  SequentialWithVariation _recombinationNetwork(
+    SequentialWithVariation net1,
+    SequentialWithVariation net2,
+  ) {
+    return net1.recombination(net2);
   }
 
   void _sratNewGeneration() {
@@ -197,12 +207,10 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   }
 
   List<SequentialWithVariation> _createProgenitors() {
-    var progenitorsProrspect = _individuals.where((element) {
+    return _individuals.where((element) {
       return element.rank <= countProgenitor;
-    });
-
-    return progenitorsProrspect.map((e) {
-      return e.neuralnetWork;
+    }).map((e) {
+      return e.neuralnetWork.copy();
     }).toList();
   }
 

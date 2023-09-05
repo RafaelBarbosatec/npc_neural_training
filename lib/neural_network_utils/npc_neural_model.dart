@@ -12,7 +12,7 @@ class NpcNeuralModel {
 
   static SequentialWithVariation createModel({int input = 7, int output = 4}) {
     return SequentialWithVariation(
-      learningRate: 0.01,
+      learningRate: 0.1,
       layers: [
         DenseLayerWithActivation(
           size: input,

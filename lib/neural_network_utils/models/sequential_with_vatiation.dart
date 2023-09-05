@@ -12,8 +12,10 @@ class SequentialWithVariation extends Sequential {
     List<LayerWithActivation>? super.layers,
   });
 
-  SequentialWithVariation variation(
-      {Mutation? mutation, double percent = 1.0}) {
+  SequentialWithVariation variation({
+    Mutation? mutation,
+    double percent = 1.0,
+  }) {
     return SequentialWithVariation(
       learningRate: learningRate,
     )..layers.addAll(layers //
@@ -21,6 +23,26 @@ class SequentialWithVariation extends Sequential {
         .map((layer) => layer.isInput
             ? layer.copyWith()
             : layer.variation(mutation: mutation, percent: percent)));
+  }
+
+  SequentialWithVariation recombination(SequentialWithVariation network) {
+    List<LayerWithActivation> l = [];
+    for (int i = 0; i < this.layers.length; i++) {
+      l.add(
+        (layers[i] as LayerWithActivation).recombination(network.layers[i]),
+      );
+    }
+    return SequentialWithVariation(
+      learningRate: learningRate,
+    )..layers.addAll(l);
+  }
+
+  SequentialWithVariation copy() {
+    return SequentialWithVariation(
+      learningRate: learningRate,
+    )..layers.addAll(layers //
+        .cast<LayerWithActivation>()
+        .map((layer) => layer.copyWith()));
   }
 
   /// Loads a model from a JSON .

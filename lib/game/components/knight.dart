@@ -103,7 +103,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
 
   @override
   void render(Canvas canvas) {
-    if (rank < 20 && !isDead) {
+    if (rank <= 50 && !isDead) {
       if (isTheBest) {
         _renderRayCast(canvas);
       }
@@ -265,7 +265,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
   }
 
   void _tickCheckStoped() {
-    if (lastDisplacement.x.abs() < 0.5 && lastDisplacement.y.abs() < 0.5) {
+    if (lastDisplacement.x.abs() < 0.2 && lastDisplacement.y.abs() < 0.2) {
       die();
     }
   }

@@ -80,4 +80,17 @@ class LayerWithActivation extends Layer {
       sizeField: size,
     };
   }
+
+  LayerWithActivation recombination(Layer layer) {
+    if (isInput) {
+      return this;
+    }
+    List<NeuronWithActivation> newNeuros = [];
+    for (int i = 0; i < neurons.length; i++) {
+      newNeuros.add(
+        (neurons[i] as NeuronWithActivation).recombination(layer.neurons[i]),
+      );
+    }
+    return copyWith(neurons: newNeuros);
+  }
 }
