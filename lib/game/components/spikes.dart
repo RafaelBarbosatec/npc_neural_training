@@ -17,7 +17,7 @@ class Spikes extends GameDecoration with DragGesture {
   }
 
   @override
-  void onEndDrag(int pointer) {
+  void onEndDrag(GestureEvent event) {
     double restX = x % NpcNeuralGame.tilesize;
     double restY = y % NpcNeuralGame.tilesize;
     if (restX < NpcNeuralGame.tilesize / 2) {
@@ -37,6 +37,6 @@ class Spikes extends GameDecoration with DragGesture {
       restY,
     );
 
-    super.onCancelDrag(pointer);
+    super.onCancelDrag(event);
   }
 }
