@@ -1,9 +1,9 @@
-import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:npc_neural/menu_page.dart';
 import 'package:npc_neural/util/better_neural_listener.dart';
 import 'package:npc_neural/util/strage.dart';
+
 final getIt = GetIt.instance;
 
 void main() {
