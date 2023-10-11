@@ -1,8 +1,8 @@
-import 'package:bonfire/bonfire.dart';
 import 'package:d_chart/d_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:neurons_tree_widget/neurons_tree_widget.dart';
 import 'package:npc_neural/game/components/generation_manager.dart';
+import 'package:npc_neural/main.dart';
 import 'package:npc_neural/util/better_neural_listener.dart';
 
 class TrainPanelWidget extends StatefulWidget {
@@ -27,8 +27,8 @@ class _TrainPanelWidgetState extends State<TrainPanelWidget> {
 
   @override
   void initState() {
-    _generationManager = BonfireInjector().get();
-    _neuralListener = BonfireInjector().get();
+    _generationManager = getIt.get();
+    _neuralListener = getIt.get();
     super.initState();
   }
 

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:npc_neural/main.dart';
 import 'package:npc_neural/neural_network_utils/models.dart';
 import 'package:npc_neural/neural_network_utils/npc_neural_model.dart';
 import 'package:npc_neural/util/strage.dart';
@@ -35,7 +36,7 @@ class _SavedNetworksDialogState extends State<SavedNetworksDialog> {
   late NeuralWeightsStorage storage;
   @override
   void initState() {
-    storage = BonfireInjector().get();
+    storage = getIt.get();
     super.initState();
   }
 

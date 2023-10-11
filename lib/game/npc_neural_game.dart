@@ -1,9 +1,9 @@
 import 'package:bonfire/base/bonfire_game_interface.dart';
-import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
 import 'package:npc_neural/game/components/generation_manager.dart';
 import 'package:npc_neural/game/components/knight.dart';
 import 'package:npc_neural/game/neural_game.dart';
+import 'package:npc_neural/main.dart';
 import 'package:npc_neural/neural_network_utils/models.dart';
 import 'package:npc_neural/widgets/train_panel_widget.dart';
 
@@ -50,13 +50,14 @@ class _NpcNeuralGameState extends State<NpcNeuralGame> {
   @override
   void initState() {
     _generationManager = GenerationManager(
-      storage: BonfireInjector().get(),
+      storage: getIt.get(),
       baseNeural: widget.projenitorNeural,
       individualsCount: widget.individualsCount,
     );
-    BonfireInjector.instance.putSingleton(
-      (i) => _generationManager,
-    );
+    if (getIt.isRegistered<GenerationManager>()) {
+      getIt.unregister<GenerationManager>();
+    }
+    getIt.registerSingleton(_generationManager);
     super.initState();
   }
 

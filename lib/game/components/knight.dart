@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:npc_neural/game/components/finish_line.dart';
 import 'package:npc_neural/game/components/generation_manager.dart';
 import 'package:npc_neural/game/npc_neural_game.dart';
+import 'package:npc_neural/main.dart';
 import 'package:npc_neural/neural_network_utils/models/sequential_with_vatiation.dart';
 import 'package:npc_neural/util/better_neural_listener.dart';
 import 'package:npc_neural/util/spritesheet.dart';
@@ -74,7 +75,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     if (other is FinishLine) {
       if (training) {
-        var manager = BonfireInjector().get<GenerationManager>();
+        var manager = getIt.get<GenerationManager>();
         manager.setWin(this);
       }
       winner = true;
@@ -137,7 +138,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     }
 
     if (isTheBest) {
-      BonfireInjector().get<BetterNeuralListener>().setNeural(neuralnetWork);
+      getIt.get<BetterNeuralListener>().setNeural(neuralnetWork);
     }
   }
 
