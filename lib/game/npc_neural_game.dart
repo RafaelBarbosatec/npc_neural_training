@@ -2,6 +2,7 @@ import 'package:bonfire/base/bonfire_game_interface.dart';
 import 'package:flutter/material.dart';
 import 'package:npc_neural/game/components/generation_manager.dart';
 import 'package:npc_neural/game/components/knight.dart';
+import 'package:npc_neural/game/components/spikes_line.dart';
 import 'package:npc_neural/game/neural_game.dart';
 import 'package:npc_neural/main.dart';
 import 'package:npc_neural/neural_network_utils/models.dart';
@@ -80,6 +81,7 @@ class _NpcNeuralGameState extends State<NpcNeuralGame> {
                     withGraph: widget.train,
                     onTapStart: _onStart,
                     orientation: orientation,
+                    onTapGenerateSpikes: _onGenerateSpikes,
                   ),
                   Expanded(
                     child: gameWidget,
@@ -93,6 +95,7 @@ class _NpcNeuralGameState extends State<NpcNeuralGame> {
                     withGraph: widget.train,
                     onTapStart: _onStart,
                     orientation: orientation,
+                    onTapGenerateSpikes: _onGenerateSpikes,
                   ),
                   Expanded(
                     child: gameWidget,
@@ -106,14 +109,22 @@ class _NpcNeuralGameState extends State<NpcNeuralGame> {
   }
 
   void _onStart() {
+    _generationManager.generateInitPosition();
+    if (!widget.train) {
+      game?.query<Knight>().forEach((element) => element.removeFromParent());
+    }
     game?.add(
       widget.train
           ? _generationManager
           : Knight(
-              position: GenerationManager.initPosition,
+              position: _generationManager.initPosition,
               neuralnetWork: widget.projenitorNeural!,
               training: false,
-            ),
+              onWin: () {}),
     );
+  }
+
+  void _onGenerateSpikes() {
+    game?.query<SpikesLine>().forEach((element) => element.reset());
   }
 }

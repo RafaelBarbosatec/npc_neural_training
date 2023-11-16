@@ -23,7 +23,7 @@ class NeuronWithActivation extends Neuron {
               (e) {
                 switch (random.nextInt(4)) {
                   case 0:
-                    if (percent == 1.0) {
+                    if (random.nextDouble() > 0.5) {
                       final limit = 1 / sqrt(weights.length);
                       return nextDouble(from: -limit, to: limit);
                     } else {
@@ -61,8 +61,10 @@ class NeuronWithActivation extends Neuron {
   List<double> _doRecombination(List<double> weights, List<double> weights2) {
     List<double> newWeights = [];
     Random _r = Random();
-    List<bool> baseRecombination =
-        List.generate(weights.length, (index) => _r.nextBool(),);
+    List<bool> baseRecombination = List.generate(
+      weights.length,
+      (index) => _r.nextBool(),
+    );
     for (int i = 0; i < baseRecombination.length; i++) {
       if (baseRecombination[i]) {
         newWeights.add(weights[i]);

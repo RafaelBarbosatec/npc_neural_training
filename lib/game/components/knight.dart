@@ -28,6 +28,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     ..strokeWidth = 1.4;
 
   final bool training;
+  final VoidCallback? onWin;
   SequentialWithVariation neuralnetWork;
   late ShapeHitbox hitbox;
   List<SeeResult> eyesResult = [];
@@ -50,6 +51,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     required this.neuralnetWork,
     this.training = true,
     this.countEyeLines = 7,
+    this.onWin,
   }) : super(
           size: Vector2.all(NpcNeuralGame.tilesize),
           animation: SimpleDirectionAnimation(
@@ -80,6 +82,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
       }
       winner = true;
       stopMove();
+      onWin?.call();
     } else if (training) {
       die();
     }

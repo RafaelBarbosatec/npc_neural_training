@@ -8,11 +8,13 @@ import 'package:npc_neural/util/better_neural_listener.dart';
 class TrainPanelWidget extends StatefulWidget {
   final bool withGraph;
   final VoidCallback? onTapStart;
+  final VoidCallback? onTapGenerateSpikes;
   final Orientation orientation;
   const TrainPanelWidget({
     super.key,
     this.withGraph = true,
     this.onTapStart,
+    this.onTapGenerateSpikes,
     required this.orientation,
   });
 
@@ -161,13 +163,15 @@ class _TrainPanelWidgetState extends State<TrainPanelWidget> {
                 const Text('Neural of the better'),
                 const SizedBox(height: 16),
                 _buildNeuralTree(),
+                const SizedBox(height: 16),
+                if (!widget.withGraph) ..._getTestButtons()
               ]
             : [
                 SizedBox(
                   width: double.maxFinite,
                   child: ElevatedButton(
                     onPressed: _start,
-                    child: const Text('Start'),
+                    child: Text(started ? 'Again' : 'Start'),
                   ),
                 )
               ],
@@ -209,7 +213,8 @@ class _TrainPanelWidgetState extends State<TrainPanelWidget> {
                       const SizedBox(height: 16),
                       Expanded(child: _buildNeuralTree()),
                     ],
-                  )
+                  ),
+                  if (!widget.withGraph) ..._getTestButtons(),
                 ]
               : [
                   SizedBox(
@@ -222,5 +227,25 @@ class _TrainPanelWidgetState extends State<TrainPanelWidget> {
         ),
       ),
     );
+  }
+
+  _getTestButtons() {
+    return [
+      SizedBox(
+        width: double.maxFinite,
+        child: ElevatedButton(
+          onPressed: _start,
+          child: Text(started ? 'Again' : 'Start'),
+        ),
+      ),
+      SizedBox(height: 16),
+      SizedBox(
+        width: double.maxFinite,
+        child: ElevatedButton(
+          onPressed: widget.onTapGenerateSpikes,
+          child: Text('Generate spikes'),
+        ),
+      )
+    ];
   }
 }

@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
 import 'package:npc_neural/game/components/finish_line.dart';
 import 'package:npc_neural/game/components/knight.dart';
+import 'package:npc_neural/game/components/spikes_line.dart';
 import 'package:npc_neural/game/npc_neural_game.dart';
 import 'package:npc_neural/neural_network_utils/models.dart';
 import 'package:npc_neural/neural_network_utils/npc_neural_model.dart';
@@ -19,11 +21,12 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   final double timeScale;
   final int countKnightEyeLines;
   bool win = false;
+  bool canChangeSpikes = false;
 
-  static Vector2 get initPosition => Vector2(
-        1 * NpcNeuralGame.tilesize,
-        5 * NpcNeuralGame.tilesize,
-      );
+  Vector2 initPosition = Vector2(
+    1 * NpcNeuralGame.tilesize,
+    5 * NpcNeuralGame.tilesize,
+  );
 
   int get genNumber => scoreGenerations.length;
 
@@ -46,7 +49,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   GenerationManager({
     this.individualsCount = 80,
     this.timeScale = 1.5,
-    this.countWinToFinish = 4,
+    this.countWinToFinish = 10,
     this.baseNeural,
     this.countKnightEyeLines = 7,
     required this.storage,
@@ -55,6 +58,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   }
 
   void setWin(Knight knight) {
+    canChangeSpikes = true;
     if (_wins[genNumber] == null) {
       _wins[genNumber] = knight.neuralnetWork;
       countWin++;
@@ -84,16 +88,21 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   }
 
   void _createGeration() {
+    generateInitPosition();
     if (_individuals.isNotEmpty) {
+      if (canChangeSpikes) {
+        canChangeSpikes = false;
+        gameRef.query<SpikesLine>().forEach((element) => element.reset());
+      }
+
       int countMutations = individualsCount ~/ _progenitors.length - 2;
       int indexIndividuo = 0;
       for (var pro in _progenitors) {
-      
         // keep this projenitor
         _individuals[indexIndividuo].reset(initPosition, pro);
         indexIndividuo++;
 
-         // make recombination with projenitors
+        // make recombination with projenitors
         _individuals[indexIndividuo].reset(
           initPosition,
           _recombinationNetwork(_progenitors[0], _progenitors[1]),
@@ -137,7 +146,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
     return net1.recombination(net2);
   }
 
-  void _sratNewGeneration() {
+  void _startNewGeneration() {
     _analyseGeneration();
     _createGeration();
     notifyListeners();
@@ -159,7 +168,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
       countWin--;
     }
     _calculateDistanceToTarget();
-    _sratNewGeneration();
+    _startNewGeneration();
   }
 
   void _calculateScore() {
@@ -248,6 +257,13 @@ class GenerationManager extends GameComponent with ChangeNotifier {
     storage.save(
       'neural-weights-${_timeCreate.toIso8601String()}',
       neuralnetWork.getWeights(),
+    );
+  }
+
+  void generateInitPosition() {
+    initPosition = Vector2(
+      2 * NpcNeuralGame.tilesize,
+      (2 + Random().nextInt(7)) * NpcNeuralGame.tilesize,
     );
   }
 }
