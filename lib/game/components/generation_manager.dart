@@ -225,9 +225,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
 
   void _orderIndividuals() {
     _individuals.sort(
-      (a, b) {
-        return b.score.compareTo(a.score);
-      },
+      (a, b) => b.score.compareTo(a.score),
     );
   }
 
@@ -245,7 +243,6 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   void _analyseGeneration() {
     if (_individuals.isNotEmpty) {
       var bestOfGen = _individuals.first;
-      scoreGenerations[scoreGenerations.length] = lastBestScore;
       if (bestOfGen.score >= lastBestScore * 0.8) {
         scoreGenerations[scoreGenerations.length] = bestOfGen.score;
         _progenitors = _createProgenitors();

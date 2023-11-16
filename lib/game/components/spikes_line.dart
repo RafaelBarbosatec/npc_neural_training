@@ -10,6 +10,8 @@ class SpikesLine extends GameDecoration {
     [0, 1, 3, 5, 6],
     [1, 2, 4, 5],
     [0, 1, 3, 4, 6],
+    // [0, 1, 2, 5, 6],
+    // [0, 2, 3, 6],
   ];
   SpikesLine({required super.position}) : super(size: Vector2.all(16));
 
