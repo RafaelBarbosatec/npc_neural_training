@@ -214,7 +214,8 @@ class _TrainPanelWidgetState extends State<TrainPanelWidget> {
                       Expanded(child: _buildNeuralTree()),
                     ],
                   ),
-                  if (!widget.withGraph) ..._getTestButtons(),
+                  if (!widget.withGraph)
+                    ..._getTestButtons(widthInfinite: false),
                 ]
               : [
                   SizedBox(
@@ -229,10 +230,10 @@ class _TrainPanelWidgetState extends State<TrainPanelWidget> {
     );
   }
 
-  _getTestButtons() {
+  List<Widget> _getTestButtons({bool widthInfinite = true}) {
     return [
       SizedBox(
-        width: double.maxFinite,
+        width: widthInfinite ? double.maxFinite : null,
         child: ElevatedButton(
           onPressed: _start,
           child: Text(started ? 'Again' : 'Start'),
@@ -240,7 +241,7 @@ class _TrainPanelWidgetState extends State<TrainPanelWidget> {
       ),
       SizedBox(height: 16),
       SizedBox(
-        width: double.maxFinite,
+        width: widthInfinite ? double.maxFinite : null,
         child: ElevatedButton(
           onPressed: widget.onTapGenerateSpikes,
           child: Text('Generate spikes'),
