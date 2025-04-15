@@ -84,7 +84,7 @@ class Knight extends SimpleAlly with BlockMovementCollision {
       stopMove();
       onWin?.call();
     } else if (training) {
-      die();
+      onDie();
     }
 
     super.onCollision(intersectionPoints, other);
@@ -180,14 +180,14 @@ class Knight extends SimpleAlly with BlockMovementCollision {
     score = 0;
     penalty = 0;
     _createTimers();
-    revive();
+    addLife(100);
     stopMove(forceIdle: true);
   }
 
   @override
-  void die() {
+  void onDie() {
     stopMove(forceIdle: true);
-    super.die();
+    super.onDie();
   }
 
   FinishLine? _target;
@@ -264,13 +264,13 @@ class Knight extends SimpleAlly with BlockMovementCollision {
   }
 
   void _createTimers() {
-    lifeTime = IntervalTick(timeLifeInterval, onTick: die);
+    lifeTime = IntervalTick(timeLifeInterval, onTick: onDie);
     checkStopTime = IntervalTick(checkStopInterval, onTick: _tickCheckStoped);
   }
 
   void _tickCheckStoped() {
-    if (lastDisplacement.x.abs() < 0.2 && lastDisplacement.y.abs() < 0.2) {
-      die();
+    if (displacement.x.abs() < 0.2 && displacement.y.abs() < 0.2) {
+      onDie();
     }
   }
 }

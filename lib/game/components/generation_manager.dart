@@ -99,23 +99,29 @@ class GenerationManager extends GameComponent with ChangeNotifier {
       int indexIndividuo = 0;
       for (var pro in _progenitors) {
         // keep this projenitor
-        _individuals[indexIndividuo].reset(initPosition, pro);
-        indexIndividuo++;
+        if (_individuals.length > indexIndividuo) {
+          _individuals[indexIndividuo].reset(initPosition, pro);
+          indexIndividuo++;
+        }
 
-        // make recombination with projenitors
-        _individuals[indexIndividuo].reset(
-          initPosition,
-          _recombinationNetwork(_progenitors[0], _progenitors[1]),
-        );
-        indexIndividuo++;
-
-        List.generate(countMutations, (index) {
+        if (_individuals.length > indexIndividuo) {
+          // make recombination with projenitors
           _individuals[indexIndividuo].reset(
             initPosition,
-            _createNetwork(pro),
+            _recombinationNetwork(_progenitors[0], _progenitors[1]),
           );
           indexIndividuo++;
-        });
+        }
+
+        if (countMutations > 0) {
+          List.generate(countMutations, (index) {
+            _individuals[indexIndividuo].reset(
+              initPosition,
+              _createNetwork(pro),
+            );
+            indexIndividuo++;
+          });
+        }
       }
     } else {
       List.generate(individualsCount, (index) {

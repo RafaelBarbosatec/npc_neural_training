@@ -13,7 +13,7 @@ class NeuralGame extends StatelessWidget {
       builder: (context, constraints) {
         return BonfireWidget(
           map: WorldMapByTiled(
-            'map/map.tmj',
+            WorldMapReader.fromAsset('map/map.tmj'),
             objectsBuilder: {
               'finish_line': (properties) => FinishLine(
                     position: properties.position,
