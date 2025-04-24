@@ -16,26 +16,27 @@ class NeuronWithActivation extends Neuron {
   }) : super(activationAlgorithm: activationAlgorithm);
 
   NeuronWithActivation variation({Mutation? mutation, double percent = 1.0}) {
-    var random = Random();
+    // var random = Random();
     return copyWith(
       weights: weights
           .map(mutation ??
               (e) {
-                switch (random.nextInt(4)) {
-                  case 0:
-                    if (random.nextDouble() > 0.5) {
-                      final limit = 1 / sqrt(weights.length);
-                      return nextDouble(from: -limit, to: limit);
-                    } else {
-                      return e;
-                    }
-                  case 1:
-                    return e + (nextDouble(from: -1, to: 1) * percent);
-                  case 2:
-                    return e * (random.nextDouble() * percent);
-                  default:
-                    return e;
-                }
+                return e + (nextDouble(from: -1, to: 1) * percent);
+                // switch (random.nextInt(3)) {
+                //   case 0:
+                //     if (random.nextDouble() > 0.5) {
+                //       final limit = 1 / sqrt(weights.length);
+                //       return nextDouble(from: -limit, to: limit);
+                //     } else {
+                //       return e;
+                //     }
+                //   case 1:
+                //     return e + (nextDouble(from: -1, to: 1) * percent);
+                //   case 2:
+                //     return e * (random.nextDouble() * percent);
+                //   default:
+                //     return e;
+                // }
               })
           .toList(),
     );

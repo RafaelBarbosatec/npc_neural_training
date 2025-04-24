@@ -95,7 +95,8 @@ class GenerationManager extends GameComponent with ChangeNotifier {
         gameRef.query<SpikesLine>().forEach((element) => element.reset());
       }
 
-      int countMutations = individualsCount ~/ _progenitors.length - 2;
+      int countMutations = ((individualsCount - _progenitors.length) * 0.9)
+          .toInt(); // 90% of the individuals are mutations
       int indexIndividuo = 0;
       for (var pro in _progenitors) {
         // keep this projenitor
@@ -103,26 +104,33 @@ class GenerationManager extends GameComponent with ChangeNotifier {
           _individuals[indexIndividuo].reset(initPosition, pro);
           indexIndividuo++;
         }
+      }
+      if (_individuals.length > indexIndividuo) {
+        // make recombination with projenitors
+        _individuals[indexIndividuo].reset(
+          initPosition,
+          _recombinationNetwork(_progenitors[0], _progenitors[1]),
+        );
+        indexIndividuo++;
+      }
 
-        if (_individuals.length > indexIndividuo) {
-          // make recombination with projenitors
+      if (countMutations > 0) {
+        List.generate(countMutations, (index) {
           _individuals[indexIndividuo].reset(
             initPosition,
-            _recombinationNetwork(_progenitors[0], _progenitors[1]),
+            _createNetwork(_progenitors[0]),
           );
           indexIndividuo++;
-        }
-
-        if (countMutations > 0) {
-          List.generate(countMutations, (index) {
-            _individuals[indexIndividuo].reset(
-              initPosition,
-              _createNetwork(pro),
-            );
-            indexIndividuo++;
-          });
-        }
+        });
       }
+
+      List.generate(individualsCount - indexIndividuo, (index) {
+        _individuals[indexIndividuo].reset(
+          initPosition,
+          _createNetwork(null),
+        );
+        indexIndividuo++;
+      });
     } else {
       List.generate(individualsCount, (index) {
         _individuals.add(
@@ -142,7 +150,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   SequentialWithVariation _createNetwork(
     SequentialWithVariation? net,
   ) {
-    return net?.variation() ?? NpcNeuralModel.createModel();
+    return net?.variation(percent: 0.5) ?? NpcNeuralModel.createModel();
   }
 
   SequentialWithVariation _recombinationNetwork(
@@ -247,13 +255,15 @@ class GenerationManager extends GameComponent with ChangeNotifier {
   }
 
   void _analyseGeneration() {
-    if (_individuals.isNotEmpty) {
-      var bestOfGen = _individuals.first;
-      if (bestOfGen.score >= lastBestScore * 0.8) {
-        scoreGenerations[scoreGenerations.length] = bestOfGen.score;
-        _progenitors = _createProgenitors();
-      }
-    }
+    if (_individuals.isEmpty) return;
+    var bestOfGen = _individuals.first;
+    scoreGenerations[scoreGenerations.length] = bestOfGen.score;
+    _progenitors = _createProgenitors();
+    //   var bestOfGen = _individuals.first;
+    //   if (bestOfGen.score >= lastBestScore * 0.8) {
+    //     scoreGenerations[scoreGenerations.length] = bestOfGen.score;
+    //     _progenitors = _createProgenitors();
+    //   }
   }
 
   void _saveNeural(SequentialWithVariation neuralnetWork) {
