@@ -15,7 +15,7 @@ class NeuronWithActivation extends Neuron {
     super.weights,
   }) : super(activationAlgorithm: activationAlgorithm);
 
-  NeuronWithActivation variation({Mutation? mutation, double percent = 1.0}) {
+  NeuronWithActivation variation({Mutation? mutation, double percent = 1}) {
     // var random = Random();
     return copyWith(
       weights: weights
@@ -62,12 +62,9 @@ class NeuronWithActivation extends Neuron {
   List<double> _doRecombination(List<double> weights, List<double> weights2) {
     List<double> newWeights = [];
     Random _r = Random();
-    List<bool> baseRecombination = List.generate(
-      weights.length,
-      (index) => _r.nextBool(),
-    );
-    for (int i = 0; i < baseRecombination.length; i++) {
-      if (baseRecombination[i]) {
+    int cutPoint = _r.nextInt(weights.length-1);
+    for (int i = 0; i < weights.length; i++) {
+      if (i < cutPoint) {
         newWeights.add(weights[i]);
       } else {
         newWeights.add(weights2[i]);

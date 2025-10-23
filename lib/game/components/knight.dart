@@ -75,6 +75,9 @@ class Knight extends SimpleAlly with BlockMovementCollision {
 
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    if(other is Knight){
+      return;
+    }
     if (other is FinishLine) {
       if (training) {
         var manager = getIt.get<GenerationManager>();

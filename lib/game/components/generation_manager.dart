@@ -30,7 +30,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
 
   int get genNumber => scoreGenerations.length;
 
-  List<SequentialWithVariation> _progenitors = [];
+  List<Knight> _progenitors = [];
 
   double maxDistanceToTarget = 0;
 
@@ -48,7 +48,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
 
   GenerationManager({
     this.individualsCount = 80,
-    this.timeScale = 1.5,
+    this.timeScale = 1.3,
     this.countWinToFinish = 10,
     this.baseNeural,
     this.countKnightEyeLines = 7,
@@ -95,13 +95,16 @@ class GenerationManager extends GameComponent with ChangeNotifier {
         gameRef.query<SpikesLine>().forEach((element) => element.reset());
       }
 
-      int countMutations = ((individualsCount - _progenitors.length) * 0.9)
-          .toInt(); // 90% of the individuals are mutations
+      int countMutations = ((individualsCount - _progenitors.length) * 0.8)
+          .toInt(); // 80% of the individuals are mutations
       int indexIndividuo = 0;
       for (var pro in _progenitors) {
         // keep this projenitor
         if (_individuals.length > indexIndividuo) {
-          _individuals[indexIndividuo].reset(initPosition, pro);
+          _individuals[indexIndividuo].reset(
+            initPosition,
+            pro.neuralnetWork.copy(),
+          );
           indexIndividuo++;
         }
       }
@@ -109,28 +112,37 @@ class GenerationManager extends GameComponent with ChangeNotifier {
         // make recombination with projenitors
         _individuals[indexIndividuo].reset(
           initPosition,
-          _recombinationNetwork(_progenitors[0], _progenitors[1]),
+          _recombinationNetwork(
+            _progenitors[0].neuralnetWork.copy(),
+            _progenitors[1].neuralnetWork.copy(),
+          ),
         );
         indexIndividuo++;
       }
 
       if (countMutations > 0) {
-        List.generate(countMutations, (index) {
-          _individuals[indexIndividuo].reset(
-            initPosition,
-            _createNetwork(_progenitors[0]),
-          );
-          indexIndividuo++;
-        });
+        List.generate(
+          countMutations,
+          (index) {
+            _individuals[indexIndividuo].reset(
+              initPosition,
+              _mutationOrCreateNetwork(_progenitors[0].neuralnetWork.copy()),
+            );
+            indexIndividuo++;
+          },
+        );
       }
 
-      List.generate(individualsCount - indexIndividuo, (index) {
-        _individuals[indexIndividuo].reset(
-          initPosition,
-          _createNetwork(null),
-        );
-        indexIndividuo++;
-      });
+      List.generate(
+        individualsCount - indexIndividuo,
+        (index) {
+          _individuals[indexIndividuo].reset(
+            initPosition,
+            _mutationOrCreateNetwork(null),
+          );
+          indexIndividuo++;
+        },
+      );
     } else {
       List.generate(individualsCount, (index) {
         _individuals.add(
@@ -138,7 +150,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
             position: initPosition,
             neuralnetWork: index == 0 && baseNeural != null
                 ? baseNeural!
-                : _createNetwork(baseNeural),
+                : _mutationOrCreateNetwork(baseNeural),
             countEyeLines: countKnightEyeLines,
           ),
         );
@@ -147,7 +159,7 @@ class GenerationManager extends GameComponent with ChangeNotifier {
     }
   }
 
-  SequentialWithVariation _createNetwork(
+  SequentialWithVariation _mutationOrCreateNetwork(
     SequentialWithVariation? net,
   ) {
     return net?.variation(percent: 0.5) ?? NpcNeuralModel.createModel();
@@ -229,12 +241,13 @@ class GenerationManager extends GameComponent with ChangeNotifier {
     );
   }
 
-  List<SequentialWithVariation> _createProgenitors() {
-    return _individuals.where((element) {
-      return element.rank <= countProgenitor;
-    }).map((e) {
-      return e.neuralnetWork.copy();
-    }).toList();
+  List<Knight> _createProgenitors() {
+    return _individuals
+        .where((element) {
+          return element.rank <= countProgenitor;
+        })
+        .take(countProgenitor)
+        .toList();
   }
 
   void _orderIndividuals() {
@@ -258,7 +271,18 @@ class GenerationManager extends GameComponent with ChangeNotifier {
     if (_individuals.isEmpty) return;
     var bestOfGen = _individuals.first;
     scoreGenerations[scoreGenerations.length] = bestOfGen.score;
-    _progenitors = _createProgenitors();
+    final _newProgenitors = _createProgenitors();
+    if (_progenitors.isNotEmpty) {
+      for (final i
+          in List.generate(_progenitors.length - 1, (index) => index)) {
+        if (_newProgenitors[i].rank < _progenitors[i].rank) {
+          _progenitors[i] = _newProgenitors[i];
+        }
+      }
+    } else {
+      _progenitors = List.of(_newProgenitors);
+    }
+
     //   var bestOfGen = _individuals.first;
     //   if (bestOfGen.score >= lastBestScore * 0.8) {
     //     scoreGenerations[scoreGenerations.length] = bestOfGen.score;
